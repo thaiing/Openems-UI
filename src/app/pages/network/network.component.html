@@ -1,0 +1,83 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>Network Configuration</h1>
+  </div>
+  <mat-tab-group animationDuration="0ms">
+    <mat-tab label="Ethernet">
+      <div class="tab-content">
+        <div *ngFor="let eth of ethernetInterfaces" class="eth-card">
+          <div *ngIf="!eth.isEditing" class="display-mode">
+            <div class="eth-header">
+              <h3>{{ eth.netNo }}</h3>
+              <button mat-icon-button (click)="editEth(eth)">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </div>
+            <div class="eth-details">
+              <div class="detail-item"><span>DHCP:</span> <strong>{{ eth.dhcp ? 'Enabled' : 'Disabled' }}</strong></div>
+              <div class="detail-item"><span>IP Address:</span> <strong>{{ eth.ip }}</strong></div>
+              <div class="detail-item"><span>Subnet Mask:</span> <strong>{{ eth.subMask }}</strong></div>
+              <div class="detail-item"><span>Gateway:</span> <strong>{{ eth.gateway }}</strong></div>
+            </div>
+          </div>
+
+          <div *ngIf="eth.isEditing" class="edit-mode">
+            <div class="eth-header">
+              <h3>{{ eth.netNo }} - Editing</h3>
+            </div>
+            <form [formGroup]="ethEditForm" (ngSubmit)="saveEth(eth)">
+              <div class="eth-edit-form">
+                <mat-checkbox formControlName="dhcp" class="dhcp-checkbox">Enable DHCP</mat-checkbox>
+                <mat-form-field appearance="outline">
+                  <mat-label>IP Address</mat-label>
+                  <input matInput formControlName="ip">
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Subnet Mask</mat-label>
+                  <input matInput formControlName="subMask">
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Gateway</mat-label>
+                  <input matInput formControlName="gateway">
+                </mat-form-field>
+              </div>
+              <div class="action-buttons">
+                <button mat-flat-button color="primary" type="submit">Save</button>
+                <button mat-stroked-button type="button" (click)="cancelEthEdit(eth)">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="4G">
+      <div class="tab-content">
+        <div class="apn-card">
+          <form [formGroup]="apnForm" (ngSubmit)="saveApn()">
+            <mat-checkbox formControlName="enable">Enable</mat-checkbox>
+            <mat-form-field appearance="outline">
+              <mat-label>APN</mat-label>
+              <input matInput formControlName="apn">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Username</mat-label>
+              <input matInput formControlName="username">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Password</mat-label>
+              <input matInput formControlName="password" type="password">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Server</mat-label>
+              <input matInput formControlName="server">
+            </mat-form-field>
+            <div class="action-buttons">
+              <button mat-flat-button color="primary" type="submit">Save</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

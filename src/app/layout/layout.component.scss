@@ -1,0 +1,151 @@
+$mobile-breakpoint: 992px;
+$header-height: 60px;
+$sidebar-width: 250px;
+
+// --- Cấu trúc cho Header cố định ---
+.header, .mobile-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: $header-height;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  background-color: #012596;
+  color: #ffffff;
+  padding: 0 24px;
+  box-sizing: border-box;
+}
+
+.header {
+  justify-content: space-between;
+}
+
+.mobile-header {
+  display: none;
+  justify-content: space-between;
+}
+
+// Style cho logo và các thành phần header
+.logo-img {
+  height: 32px;
+  width: auto;
+}
+
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.action-btn, .menu-toggle-btn {
+  color: #ffffff;
+}
+
+.profile-btn mat-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+.mobile-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+// --- Cấu trúc cho Container chính ---
+.main-container {
+  display: flex;
+  padding-top: $header-height;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+.sidebar, .content {
+  height: calc(100vh - #{$header-height});
+}
+
+// --- Cấu trúc cho Sidebar ---
+.sidebar {
+  width: $sidebar-width;
+  background-color: #fdfdfd;
+  border-right: 1px solid #e9eef2;
+  flex-shrink: 0;
+  transition: width 0.3s ease-in-out, padding 0.3s ease-in-out;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+// --- Nội dung chính ---
+.content {
+  flex-grow: 1;
+  padding: 24px;
+  overflow-y: auto;
+  background-color: #f7f8fc;
+}
+
+// --- LOGIC RESPONSIVE VÀ THU GỌN ---
+
+// Logic thu gọn sidebar trên DESKTOP
+@media (min-width: calc($mobile-breakpoint + 1px)) {
+  .main-container.sidebar-desktop-collapsed .sidebar {
+    width: 0;
+  }
+}
+
+// Logic responsive cho MOBILE
+@media (max-width: $mobile-breakpoint) {
+  .header {
+    display: none;
+  }
+  .mobile-header {
+    display: flex;
+
+    button mat-icon {
+      color: #ffffff !important;
+    }
+  }
+
+  .sidebar {
+    position: fixed;
+    top: $header-height;
+    left: 0;
+    z-index: 1002;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    border-right: none;
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    top: $header-height;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1001;
+    display: none;
+  }
+
+  .main-container.sidebar-mobile-visible {
+    .sidebar {
+      transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+      display: block;
+    }
+  }
+}

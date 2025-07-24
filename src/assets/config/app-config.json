@@ -1,0 +1,18 @@
+{
+  "serialPortTemplates": [
+    {
+      "key": "modbus0",
+      "displayName": "Port 1",
+      "portName": "/dev/ttyS0"
+    },
+    {
+      "key": "modbus1",
+      "displayName": "Port 2",
+      "portName": "/dev/ttyS1"
+    }
+  ],
+  "inverterSettings": {
+  },
+  "networkConfig": {
+  }
+}

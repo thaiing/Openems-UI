@@ -1,0 +1,48 @@
+:host {
+  display: block;
+}
+
+$status-ok-color: #28a745;
+$status-warn-color: #ffc107;
+$status-error-color: #dc3545;
+$primary-color: #012596;
+$border-color: #e9eef2;
+$label-color: #6c757d;
+$text-color: #343a40;
+
+.page-container {
+  padding: 24px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: $primary-color;
+    margin-bottom: 24px;
+  }
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.detail-card {
+  border-left: 4px solid #e0e0e0;
+
+  &.status-ok {
+    border-left-color: $status-ok-color;
+  }
+
+  &.status-warn {
+    border-left-color: $status-warn-color;
+  }
+
+  &.status-error {
+    border-left-color: $status-error-color;
+  }
+}

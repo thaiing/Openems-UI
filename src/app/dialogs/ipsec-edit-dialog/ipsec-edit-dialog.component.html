@@ -1,0 +1,117 @@
+<h2 mat-dialog-title>{{ isEditMode ? 'Edit' : 'Create' }} IPSec Connection</h2>
+<mat-dialog-content>
+  <form [formGroup]="form">
+    <mat-radio-group formControlName="settingsType" class="settings-type">
+      <mat-radio-button value="Quick">Quick Settings</mat-radio-button>
+      <mat-radio-button value="Advanced">Advanced Settings</mat-radio-button>
+    </mat-radio-group>
+
+    <fieldset>
+      <legend>Tunnel Settings</legend>
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option [value]="true">Enabled</mat-option>
+            <mat-option [value]="false">Disabled</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Name *</mat-label>
+          <input matInput formControlName="name"></mat-form-field>
+
+        <mat-form-field appearance="outline" *ngIf="form.get('settingsType')?.value === 'Advanced'">
+          <mat-label>L2TP Tunnel *</mat-label>
+          <mat-select formControlName="l2tpTunnel">
+            <mat-option value="Disabled">Disabled</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>VPN Connection *</mat-label>
+          <mat-select formControlName="vpnConnection">
+            <mat-option value="Site to Site">Site to Site</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Remote VPN Gateway *</mat-label>
+          <input matInput formControlName="remoteGateway"></mat-form-field>
+
+        <mat-form-field appearance="outline" *ngIf="form.get('settingsType')?.value === 'Advanced'">
+          <mat-label>Startup Mode *</mat-label>
+          <mat-select formControlName="startupMode">
+            <mat-option value="Initiate Automatically">Initiate Automatically</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <fieldset formArrayName="localNetworkList" *ngIf="form.get('settingsType')?.value === 'Advanced'">
+      <legend>Local Network List
+        <button type="button" mat-icon-button (click)="addNetwork('local')">
+          <mat-icon>add_circle</mat-icon>
+        </button>
+      </legend>
+      <div *ngFor="let group of localNetworkList.controls; let i=index" [formGroupName]="i" class="network-row">
+        <mat-checkbox formControlName="enabled"></mat-checkbox>
+        <mat-form-field appearance="outline" class="network-ip">
+          <mat-label>Local Network *</mat-label>
+          <input matInput formControlName="network"></mat-form-field>
+        <mat-form-field appearance="outline" class="network-mask">
+          <mat-label>Netmask *</mat-label>
+          <input matInput formControlName="netmask"></mat-form-field>
+        <button type="button" mat-icon-button color="warn" (click)="removeNetwork('local', i)"
+                *ngIf="localNetworkList.length > 1">
+          <mat-icon>remove_circle</mat-icon>
+        </button>
+      </div>
+    </fieldset>
+
+    <fieldset formArrayName="remoteNetworkList">
+      <legend>Remote Network List
+        <button type="button" mat-icon-button (click)="addNetwork('remote')">
+          <mat-icon>add_circle</mat-icon>
+        </button>
+      </legend>
+      <div *ngFor="let group of remoteNetworkList.controls; let i=index" [formGroupName]="i" class="network-row">
+        <mat-checkbox formControlName="enabled"></mat-checkbox>
+        <mat-form-field appearance="outline" class="network-ip">
+          <mat-label>Remote Network *</mat-label>
+          <input matInput formControlName="network"></mat-form-field>
+        <mat-form-field appearance="outline" class="network-mask">
+          <mat-label>Netmask *</mat-label>
+          <input matInput formControlName="netmask"></mat-form-field>
+        <button type="button" mat-icon-button color="warn" (click)="removeNetwork('remote', i)"
+                *ngIf="remoteNetworkList.length > 1">
+          <mat-icon>remove_circle</mat-icon>
+        </button>
+      </div>
+    </fieldset>
+
+    <fieldset *ngIf="form.get('settingsType')?.value === 'Quick'">
+      <legend>Security Settings</legend>
+      <mat-radio-group formControlName="securityType" class="security-type">
+        <mat-radio-button value="Simple">Simple</mat-radio-button>
+        <mat-radio-button value="Standard">Standard</mat-radio-button>
+        <mat-radio-button value="Strong">Strong</mat-radio-button>
+        <mat-radio-button value="Extra">Extra</mat-radio-button>
+      </mat-radio-group>
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Authentication Mode *</mat-label>
+          <mat-select formControlName="authMode">
+            <mat-option value="Pre-shared Key">Pre-shared Key</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Pre-shared Key *</mat-label>
+          <input matInput formControlName="preSharedKey" type="password">
+        </mat-form-field>
+      </div>
+    </fieldset>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-stroked-button (click)="onCancel()">CANCEL</button>
+  <button mat-flat-button color="primary" (click)="onSave()">{{ isEditMode ? 'APPLY' : 'CREATE' }}</button>
+</mat-dialog-actions>

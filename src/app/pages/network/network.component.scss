@@ -1,0 +1,93 @@
+$primary-color: #012596;
+
+:host {
+  display: block;
+}
+
+.page-container {
+  padding: 16px;
+}
+
+h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: $primary-color;
+  margin-bottom: 24px;
+}
+
+.tab-content {
+  padding: 24px 8px;
+}
+
+// --- Ethernet Tab Styles ---
+.eth-card {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e9eef2;
+}
+
+.eth-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e9eef2;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+}
+
+.eth-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+
+  .detail-item {
+    span {
+      display: block;
+      color: #6c757d;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    strong {
+      font-size: 16px;
+    }
+  }
+}
+
+.eth-edit-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+
+  .dhcp-checkbox {
+    grid-column: 1 / -1; // Checkbox chiếm cả hàng
+    margin-bottom: 12px;
+  }
+}
+
+// --- APN Tab Styles ---
+.apn-card {
+  max-width: 600px;
+  margin: 0 auto;
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}

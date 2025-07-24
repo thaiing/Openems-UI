@@ -1,0 +1,52 @@
+<mat-nav-list class="nav-menu">
+  <a mat-list-item routerLink="/status" routerLinkActive="active" class="nav-item" (click)="linkClicked.emit()">
+    <mat-icon matListItemIcon>bar_chart</mat-icon>
+    <span matListItemTitle>Status</span>
+  </a>
+  <a mat-list-item routerLink="/serial" routerLinkActive="active" class="nav-item" (click)="linkClicked.emit()">
+    <mat-icon matListItemIcon>settings_ethernet</mat-icon>
+    <span matListItemTitle>Serial</span>
+  </a>
+  <a mat-list-item routerLink="/network" routerLinkActive="active" class="nav-item" (click)="linkClicked.emit()">
+    <mat-icon matListItemIcon>wifi</mat-icon>
+    <span matListItemTitle>Network</span>
+  </a>
+  <a mat-list-item routerLink="/inverter" routerLinkActive="active" class="nav-item" (click)="linkClicked.emit()">
+    <mat-icon matListItemIcon>bolt</mat-icon>
+    <span matListItemTitle>Inverter</span>
+  </a>
+  <a mat-list-item routerLink="/poi-meter" routerLinkActive="active" class="nav-item" (click)="linkClicked.emit()">
+    <mat-icon matListItemIcon>speed</mat-icon>
+    <span matListItemTitle>Meter</span>
+  </a>
+  <a mat-list-item routerLink="/storage" routerLinkActive="active" class="nav-item" (click)="linkClicked.emit()">
+    <mat-icon matListItemIcon>battery_charging_full</mat-icon>
+    <span matListItemTitle>Storage</span>
+  </a>
+
+  <a mat-list-item routerLink="/ppc" routerLinkActive="active" class="nav-item" (click)="linkClicked.emit()">
+    <mat-icon matListItemIcon>tune</mat-icon>
+    <span matListItemTitle>PPC</span>
+  </a>
+
+  <div class="submenu-container">
+    <div class="nav-item parent-item" (click)="toggleSubMenu('vpn')" [class.open]="openMenu === 'vpn'">
+      <div class="parent-item-title">
+        <mat-icon matListItemIcon>vpn_lock</mat-icon>
+        <span matListItemTitle>VPN</span>
+      </div>
+      <mat-icon class="submenu-indicator">expand_more</mat-icon>
+    </div>
+    <div class="submenu" *ngIf="openMenu === 'vpn'">
+      <a mat-list-item routerLink="/ipsec" routerLinkActive="active" class="nav-item sub-item"
+         (click)="linkClicked.emit()">
+        <span matListItemTitle>IPSec</span>
+      </a>
+      <a mat-list-item routerLink="/openvpn" routerLinkActive="active" class="nav-item sub-item"
+         (click)="linkClicked.emit()">
+        <span matListItemTitle>OpenVPN</span>
+      </a>
+    </div>
+  </div>
+
+</mat-nav-list>

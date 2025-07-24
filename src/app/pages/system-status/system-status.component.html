@@ -1,0 +1,128 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-text">
+      <h1>System Status</h1>
+      <p>Real-time overview of all connected devices.</p>
+    </div>
+    <span class="last-updated">{{ statusData.lastUpdated }}</span>
+  </div>
+
+  <div class="quick-actions">
+    <button mat-stroked-button color="primary">
+      <mat-icon>cached</mat-icon>
+      Reboot Device
+    </button>
+    <button mat-stroked-button>
+      <mat-icon>description</mat-icon>
+      View Logs
+    </button>
+    <button mat-stroked-button>
+      <mat-icon>biotech</mat-icon>
+      Run Diagnostics
+    </button>
+  </div>
+
+  <div class="dashboard-grid">
+    <mat-card class="detail-card system-info-card" [ngClass]="'status-' + statusData.overall?.statusClass">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>task_alt</mat-icon>
+        <mat-card-title>Overall Status</mat-card-title>
+        <mat-card-subtitle>{{ statusData.overall?.status }}</mat-card-subtitle>
+      </mat-card-header>
+    </mat-card>
+
+    <mat-card class="detail-card system-info-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>memory</mat-icon>
+        <mat-card-title>System Information</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="detail-line"><span>Firmware Version:</span> <strong>{{ statusData.systemInfo?.firmware }}</strong>
+        </div>
+        <div class="detail-line"><span>Serial Number:</span> <strong>{{ statusData.systemInfo?.serialNumber }}</strong>
+        </div>
+        <div class="detail-line"><span>System Uptime:</span> <strong>{{ statusData.systemInfo?.uptime }}</strong></div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="detail-card" [ngClass]="'status-' + statusData.serial?.statusClass">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>settings_ethernet</mat-icon>
+        <mat-card-title>Serial</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="detail-line"><span>Port:</span> <strong>{{ statusData.serial?.port }}</strong></div>
+        <div class="detail-line"><span>Baud Rate:</span> <strong>{{ statusData.serial?.baudRate }}</strong></div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="detail-card" [ngClass]="'status-' + statusData.network?.statusClass">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>wifi</mat-icon>
+        <mat-card-title>Network</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="detail-line"><span>IP Address:</span> <strong>{{ statusData.network?.ip }}</strong></div>
+        <div class="detail-line"><span>DHCP:</span> <strong>{{ statusData.network?.dhcp }}</strong></div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="detail-card" [ngClass]="'status-' + statusData.inverter?.statusClass">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>bolt</mat-icon>
+        <mat-card-title>Inverter</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="detail-line"><span>Name:</span> <strong>{{ statusData.inverter?.name }}</strong></div>
+        <div class="detail-line"><span>Brand:</span> <strong>{{ statusData.inverter?.brand }}</strong></div>
+        <div class="detail-line"><span>Pmax:</span> <strong>{{ statusData.inverter?.pmax }} kW</strong></div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="detail-card" [ngClass]="'status-' + statusData.meter?.statusClass">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>speed</mat-icon>
+        <mat-card-title>Meter</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="detail-line"><span>Name:</span> <strong>{{ statusData.meter?.name }}</strong></div>
+        <div class="detail-line"><span>POI:</span> <strong>{{ statusData.meter?.poi ? 'Yes' : 'No' }}</strong></div>
+        <div class="detail-line"><span>Invert:</span> <strong>{{ statusData.meter?.invert ? 'Yes' : 'No' }}</strong>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="detail-card" [ngClass]="'status-' + statusData.storage?.statusClass">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>battery_charging_full</mat-icon>
+        <mat-card-title>Storage</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="detail-line"><span>Name:</span> <strong>{{ statusData.storage?.name }}</strong></div>
+        <div class="detail-line"><span>Charging:</span> <strong>{{ statusData.storage?.chargingPower }} kW</strong>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="detail-card" [ngClass]="'status-' + statusData.ppc?.statusClass">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>tune</mat-icon>
+        <mat-card-title>PPC</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="detail-line"><span>Active Mode:</span> <strong>{{ statusData.ppc?.enabledModes }}</strong></div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="detail-card" [ngClass]="'status-' + statusData.vpn?.statusClass">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>vpn_lock</mat-icon>
+        <mat-card-title>VPN</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="detail-line"><span>Type:</span> <strong>{{ statusData.vpn?.type }}</strong></div>
+        <div class="detail-line"><span>Status:</span> <strong>{{ statusData.vpn?.status }}</strong></div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

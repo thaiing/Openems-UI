@@ -1,0 +1,119 @@
+:host {
+  display: block;
+}
+
+// Biến màu để dễ quản lý
+$primary-color: #012596;
+$border-color: #e9eef2;
+$label-color: #6c757d;
+
+.page-container {
+  padding: 24px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+}
+
+.page-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: $primary-color;
+  margin-bottom: 24px;
+}
+
+
+// --- Style chung ---
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+// --- Card thêm mới ---
+.form-card {
+  margin-bottom: 24px;
+}
+
+// --- Danh sách Inverter ---
+.inverter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inverter-card {
+  // Loại bỏ padding mặc định của mat-card để mat-card-content kiểm soát
+  padding: 0 !important;
+}
+
+// Chế độ hiển thị
+.display-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.inverter-details {
+  display: grid;
+  grid-template-columns: 0.5fr 1.5fr 1fr 1fr 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+  align-items: center;
+
+  .detail-item {
+    span {
+      font-size: 13px;
+      color: $label-color;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    strong {
+      font-size: 15px;
+      font-weight: 500;
+    }
+  }
+}
+
+// --- RESPONSIVE ---
+@media (max-width: 992px) {
+  .inverter-details {
+    grid-template-columns: repeat(3, 1fr); // 3 cột trên tablet
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .display-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inverter-details {
+    grid-template-columns: repeat(2, 1fr); // 2 cột trên mobile
+  }
+
+  .inverter-actions {
+    align-self: flex-end;
+    margin-top: 12px;
+  }
+}

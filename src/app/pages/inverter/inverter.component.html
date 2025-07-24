@@ -1,0 +1,106 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>Inverter Management</h1>
+    <button mat-flat-button color="primary" (click)="toggleAddForm()">
+      <mat-icon>add</mat-icon>
+      Add New Inverter
+    </button>
+  </div>
+
+  <mat-card *ngIf="showAddForm" class="form-card">
+    <mat-card-header>
+      <mat-card-title>New Inverter Details</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="addInverterForm" (ngSubmit)="onAddInverter()">
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Tên</mat-label>
+            <input matInput formControlName="name">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Hãng</mat-label>
+            <mat-select formControlName="brand">
+              <mat-option *ngFor="let brand of inverterBrands" [value]="brand">{{ brand }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Pmax</mat-label>
+            <input matInput formControlName="pmax" type="number">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Serial Port</mat-label>
+            <mat-select formControlName="serialPort">
+              <mat-option *ngFor="let port of serialPorts" [value]="port">{{ port }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Modbus ID</mat-label>
+            <input matInput formControlName="modbusId" type="number">
+          </mat-form-field>
+        </div>
+        <div class="action-buttons">
+          <button mat-flat-button color="primary" type="submit" [disabled]="addInverterForm.invalid">Add Inverter
+          </button>
+          <button mat-stroked-button type="button" (click)="toggleAddForm()">Cancel</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="inverter-list">
+    <mat-card *ngFor="let inverter of inverters" class="inverter-card">
+      <div *ngIf="!inverter.isEditing">
+        <mat-card-content class="display-content">
+          <div class="inverter-details">
+            <div class="detail-item"><span>STT</span><strong>{{ inverter.id }}</strong></div>
+            <div class="detail-item"><span>Tên</span><strong>{{ inverter.name }}</strong></div>
+            <div class="detail-item"><span>Hãng</span><strong>{{ inverter.brand }}</strong></div>
+            <div class="detail-item"><span>Pmax</span><strong>{{ inverter.pmax }}</strong></div>
+            <div class="detail-item"><span>Serial Port</span><strong>{{ inverter.serialPort }}</strong></div>
+            <div class="detail-item"><span>Modbus ID</span><strong>{{ inverter.modbusId }}</strong></div>
+          </div>
+          <div class="inverter-actions">
+            <button mat-icon-button color="primary" (click)="editInverter(inverter)">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+        </mat-card-content>
+      </div>
+
+      <div *ngIf="inverter.isEditing">
+        <mat-card-content>
+          <form [formGroup]="editInverterForm" (ngSubmit)="saveInverter(inverter)">
+            <div class="form-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Tên</mat-label>
+                <input matInput formControlName="name"></mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Hãng</mat-label>
+                <mat-select formControlName="brand">
+                  <mat-option *ngFor="let brand of inverterBrands" [value]="brand">{{ brand }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Pmax</mat-label>
+                <input matInput formControlName="pmax" type="number"></mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Serial Port</mat-label>
+                <mat-select formControlName="serialPort">
+                  <mat-option *ngFor="let port of serialPorts" [value]="port">{{ port }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Modbus ID</mat-label>
+                <input matInput formControlName="modbusId" type="number"></mat-form-field>
+            </div>
+            <div class="action-buttons">
+              <button mat-flat-button color="primary" type="submit" [disabled]="editInverterForm.invalid">Save</button>
+              <button mat-stroked-button type="button" (click)="cancelEdit(inverter)">Cancel</button>
+            </div>
+          </form>
+        </mat-card-content>
+      </div>
+    </mat-card>
+  </div>
+</div>

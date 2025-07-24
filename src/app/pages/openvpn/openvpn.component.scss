@@ -1,0 +1,84 @@
+$primary-color: #012596;
+
+:host {
+  display: block;
+}
+
+.page-container {
+  padding: 24px;
+
+}
+
+.page-header {
+  margin-bottom: 24px;
+
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: $primary-color;
+    margin-bottom: 24px;
+  }
+
+}
+
+
+.tab-content {
+  padding: 24px 0;
+}
+
+// --- Settings Tab ---
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 600px;
+}
+
+.file-upload-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  .file-name {
+    font-style: italic;
+    color: #6c757d;
+  }
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 16px;
+}
+
+// --- Status Tab ---
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.status-item {
+  .label {
+    display: block;
+    color: #6c757d;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  .value {
+    font-size: 16px;
+    font-weight: 500;
+  }
+}
+
+.status-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #dc3545; // Màu mặc định (Disconnected)
+
+  &.connected {
+    color: #28a745; // Màu khi connected
+  }
+}

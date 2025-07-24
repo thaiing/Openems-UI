@@ -1,0 +1,92 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>Storage Management</h1>
+    <button mat-flat-button color="primary" (click)="toggleAddForm()">
+      <mat-icon>add</mat-icon>
+      Add New Storage
+    </button>
+  </div>
+
+  <mat-card *ngIf="showAddForm" class="form-card">
+    <mat-card-content>
+      <form [formGroup]="addStorageForm" (ngSubmit)="onAddStorage()">
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Tên</mat-label>
+            <input matInput formControlName="name"></mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Hãng</mat-label>
+            <mat-select formControlName="brand">
+              <mat-option *ngFor="let brand of storageBrands" [value]="brand">{{ brand }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Serial Port</mat-label>
+            <mat-select formControlName="serialPort">
+              <mat-option *ngFor="let port of serialPorts" [value]="port">{{ port }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Modbus ID</mat-label>
+            <input matInput formControlName="modbusId" type="number"></mat-form-field>
+        </div>
+        <div class="action-buttons">
+          <button mat-flat-button color="primary" type="submit" [disabled]="addStorageForm.invalid">Add Storage</button>
+          <button mat-stroked-button type="button" (click)="toggleAddForm()">Cancel</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="storage-list">
+    <mat-card *ngFor="let storage of storages" class="storage-card">
+      <div *ngIf="!storage.isEditing">
+        <mat-card-content class="display-content">
+          <div class="storage-details">
+            <div class="detail-item"><span>STT</span><strong>{{ storage.id }}</strong></div>
+            <div class="detail-item"><span>Tên</span><strong>{{ storage.name }}</strong></div>
+            <div class="detail-item"><span>Hãng</span><strong>{{ storage.brand }}</strong></div>
+            <div class="detail-item"><span>Serial Port</span><strong>{{ storage.serialPort }}</strong></div>
+            <div class="detail-item"><span>Modbus ID</span><strong>{{ storage.modbusId }}</strong></div>
+          </div>
+          <div class="storage-actions">
+            <button mat-icon-button color="primary" (click)="editStorage(storage)">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+        </mat-card-content>
+      </div>
+
+      <div *ngIf="storage.isEditing">
+        <mat-card-content>
+          <form [formGroup]="editStorageForm" (ngSubmit)="saveStorage(storage)">
+            <div class="form-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Tên</mat-label>
+                <input matInput formControlName="name"></mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Hãng</mat-label>
+                <mat-select formControlName="brand">
+                  <mat-option *ngFor="let brand of storageBrands" [value]="brand">{{ brand }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Serial Port</mat-label>
+                <mat-select formControlName="serialPort">
+                  <mat-option *ngFor="let port of serialPorts" [value]="port">{{ port }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Modbus ID</mat-label>
+                <input matInput formControlName="modbusId" type="number"></mat-form-field>
+            </div>
+            <div class="action-buttons">
+              <button mat-flat-button color="primary" type="submit" [disabled]="editStorageForm.invalid">Save</button>
+              <button mat-stroked-button type="button" (click)="cancelEdit(storage)">Cancel</button>
+            </div>
+          </form>
+        </mat-card-content>
+      </div>
+    </mat-card>
+  </div>
+</div>

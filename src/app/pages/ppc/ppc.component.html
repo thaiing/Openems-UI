@@ -1,0 +1,85 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>Power Plan Controller</h1>
+  </div>
+  <form [formGroup]="ppcForm" (ngSubmit)="onSave()">
+    <mat-card class="master-toggle-card">
+      <mat-slide-toggle formControlName="masterEnable" color="primary">
+        Enable PPC Control
+      </mat-slide-toggle>
+      <p>Enable or disable all Power Plant Control functions.</p>
+    </mat-card>
+
+    <div class="settings-container" [class.disabled]="!ppcForm.get('masterEnable')?.value">
+
+      <mat-card formGroupName="activePower">
+        <mat-card-header>
+          <mat-card-title>Active Power Limit Control</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="card-content-grid">
+            <mat-slide-toggle formControlName="enabled" color="primary"></mat-slide-toggle>
+            <mat-form-field appearance="outline">
+              <mat-label>Limit Value</mat-label>
+              <input matInput type="number" formControlName="limitValue">
+              <span matTextSuffix>kW</span>
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card formGroupName="activePowerPercent">
+        <mat-card-header>
+          <mat-card-title>Active Power Limit Percent Control</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="card-content-grid">
+            <mat-slide-toggle formControlName="enabled" color="primary"></mat-slide-toggle>
+            <mat-form-field appearance="outline">
+              <mat-label>Limit Value</mat-label>
+              <input matInput type="number" formControlName="limitValue">
+              <span matTextSuffix>%</span>
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card formGroupName="reactivePower">
+        <mat-card-header>
+          <mat-card-title>Reactive Power Limit Control</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="card-content-grid">
+            <mat-slide-toggle formControlName="enabled" color="primary"></mat-slide-toggle>
+            <mat-form-field appearance="outline">
+              <mat-label>Limit Value</mat-label>
+              <input matInput type="number" formControlName="limitValue">
+              <span matTextSuffix>kVar</span>
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card formGroupName="reactivePowerPercent">
+        <mat-card-header>
+          <mat-card-title>Reactive Power Limit Percent Control</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="card-content-grid">
+            <mat-slide-toggle formControlName="enabled" color="primary"></mat-slide-toggle>
+            <mat-form-field appearance="outline">
+              <mat-label>Limit Value</mat-label>
+              <input matInput type="number" formControlName="limitValue">
+              <span matTextSuffix>%</span>
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+    </div>
+
+    <div class="save-button-container">
+      <button mat-flat-button color="primary" type="submit">Save Changes</button>
+    </div>
+  </form>
+</div>

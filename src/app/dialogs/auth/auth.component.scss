@@ -1,0 +1,10 @@
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  padding-top: 24px;
+  gap: 16px;
+}
+
+mat-dialog-content {
+  overflow: hidden; // Tránh xuất hiện scrollbar không cần thiết
+}

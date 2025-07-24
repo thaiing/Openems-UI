@@ -1,0 +1,45 @@
+fieldset {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 24px;
+
+  legend {
+    padding: 0 8px;
+    font-weight: 500;
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.settings-type, .security-type {
+  margin-bottom: 24px;
+
+  mat-radio-button {
+    margin-right: 24px;
+  }
+}
+
+.network-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+
+  .network-ip {
+    flex-grow: 1;
+  }
+
+  .network-mask {
+    width: 150px;
+  }
+}
+
+mat-dialog-content {
+  padding-top: 20px;
+}
+

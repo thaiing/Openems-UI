@@ -1,0 +1,80 @@
+$primary-color: #012596;
+
+:host {
+  display: block;
+}
+
+.page-container {
+  padding: 24px;
+}
+
+h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: $primary-color;
+  margin-bottom: 24px;
+}
+
+.master-toggle-card {
+  margin-bottom: 24px;
+  padding: 20px 24px !important;
+
+  mat-slide-toggle {
+    font-size: 18px;
+    font-weight: 500;
+  }
+
+  p {
+    font-size: 14px;
+    color: #6c757d;
+    margin: 8px 0 0 0;
+  }
+}
+
+.settings-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 24px;
+  position: relative;
+  transition: filter 0.3s ease; // Hiệu ứng mờ dần
+
+  // Hiệu ứng "mờ" và vô hiệu hóa
+  &.disabled {
+    filter: grayscale(80%) opacity(0.6); // Làm cho các card bị xám và mờ đi
+    pointer-events: none; // Vô hiệu hóa click chuột
+  }
+}
+
+mat-card {
+  padding: 0 !important;
+}
+
+mat-card-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #e9eef2;
+}
+
+mat-card-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+mat-card-content {
+  padding: 24px;
+}
+
+.card-content-grid {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+
+  mat-slide-toggle {
+    margin-right: auto; // Đẩy ô input sang phải
+  }
+}
+
+.save-button-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 32px;
+}

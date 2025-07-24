@@ -1,0 +1,107 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>Meter Management</h1>
+    <button mat-flat-button color="primary" (click)="toggleAddForm()">
+      <mat-icon>add</mat-icon>
+      Add New Meter
+    </button>
+  </div>
+
+  <mat-card *ngIf="showAddForm" class="form-card">
+    <mat-card-content>
+      <form [formGroup]="addMeterForm" (ngSubmit)="onAddMeter()">
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Tên</mat-label>
+            <input matInput formControlName="name"></mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Hãng</mat-label>
+            <mat-select formControlName="brand">
+              <mat-option *ngFor="let brand of meterBrands" [value]="brand">{{ brand }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Serial Port</mat-label>
+            <mat-select formControlName="serialPort">
+              <mat-option *ngFor="let port of serialPorts" [value]="port">{{ port }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Modbus ID</mat-label>
+            <input matInput formControlName="modbusId" type="number"></mat-form-field>
+          <div class="checkbox-group">
+            <mat-checkbox formControlName="invertPower">Invert Power</mat-checkbox>
+            <mat-checkbox formControlName="poi">Set as POI</mat-checkbox>
+          </div>
+        </div>
+        <div class="action-buttons">
+          <button mat-flat-button color="primary" type="submit" [disabled]="addMeterForm.invalid">Add Meter</button>
+          <button mat-stroked-button type="button" (click)="toggleAddForm()">Cancel</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="meter-list">
+    <mat-card *ngFor="let meter of meters" class="meter-card">
+      <div *ngIf="!meter.isEditing">
+        <mat-card-content class="display-content">
+          <div class="meter-details">
+            <div class="detail-item"><span>STT</span><strong>{{ meter.id }}</strong></div>
+            <div class="detail-item"><span>Tên</span><strong>{{ meter.name }}</strong></div>
+            <div class="detail-item"><span>Hãng</span><strong>{{ meter.brand }}</strong></div>
+            <div class="detail-item"><span>Invert</span><strong>{{ meter.invertPower ? 'True' : 'False' }}</strong>
+            </div>
+            <div class="detail-item"><span>POI</span>
+              <mat-icon
+                [style.color]="meter.poi ? 'green' : 'gray'">{{ meter.poi ? 'check_circle' : 'radio_button_unchecked' }}
+              </mat-icon>
+            </div>
+            <div class="detail-item"><span>Port</span><strong>{{ meter.serialPort }}</strong></div>
+            <div class="detail-item"><span>Modbus ID</span><strong>{{ meter.modbusId }}</strong></div>
+          </div>
+          <div class="meter-actions">
+            <button mat-icon-button color="primary" (click)="editMeter(meter)">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+        </mat-card-content>
+      </div>
+
+      <div *ngIf="meter.isEditing">
+        <mat-card-content>
+          <form [formGroup]="editMeterForm" (ngSubmit)="saveMeter(meter)">
+            <div class="form-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Tên</mat-label>
+                <input matInput formControlName="name"></mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Hãng</mat-label>
+                <mat-select formControlName="brand">
+                  <mat-option *ngFor="let brand of meterBrands" [value]="brand">{{ brand }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Serial Port</mat-label>
+                <mat-select formControlName="serialPort">
+                  <mat-option *ngFor="let port of serialPorts" [value]="port">{{ port }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Modbus ID</mat-label>
+                <input matInput formControlName="modbusId" type="number"></mat-form-field>
+              <div class="checkbox-group">
+                <mat-checkbox formControlName="invertPower">Invert Power</mat-checkbox>
+                <mat-checkbox formControlName="poi">Set as POI</mat-checkbox>
+              </div>
+            </div>
+            <div class="action-buttons">
+              <button mat-flat-button color="primary" type="submit" [disabled]="editMeterForm.invalid">Save</button>
+              <button mat-stroked-button type="button" (click)="cancelEdit(meter)">Cancel</button>
+            </div>
+          </form>
+        </mat-card-content>
+      </div>
+    </mat-card>
+  </div>
+</div>

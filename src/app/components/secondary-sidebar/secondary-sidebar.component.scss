@@ -1,0 +1,80 @@
+.nav-menu {
+  padding-top: 8px;
+  height: 100%;
+}
+
+// Style chung cho tất cả các mục trong menu
+.nav-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 44px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  color: #333;
+  // Áp dụng padding chung cho tất cả, bao gồm cả VPN
+  padding: 0 16px;
+  box-sizing: border-box; // Đảm bảo padding không làm tăng kích thước
+
+  mat-icon[matListItemIcon] {
+    color: #5f6368;
+    margin-right: 16px; // Tạo khoảng cách đều giữa icon và chữ
+  }
+}
+
+// Chỉ áp dụng hiệu ứng cho các thẻ <a> có thể click
+a.nav-item {
+  &:hover {
+    background-color: #f1f3f4;
+  }
+
+  // Style cho mục đang được chọn (active)
+  &.active {
+    background-color: #e8eaf6;
+    color: #3f51b5;
+    font-weight: 500;
+
+    mat-icon {
+      color: #3f51b5;
+    }
+  }
+}
+
+
+// --- Style cho menu cha (VPN) ---
+.parent-item {
+  justify-content: space-between;
+  cursor: pointer;
+  // Bỏ padding riêng để dùng padding chung của .nav-item
+  // padding: 0;
+
+  .parent-item-title {
+    display: flex;
+    align-items: center;
+  }
+
+  .submenu-indicator {
+    transition: transform 0.3s ease;
+  }
+
+  // Xoay icon mũi tên khi menu được mở
+  &.open .submenu-indicator {
+    transform: rotate(180deg);
+  }
+}
+
+// --- Style cho menu con ---
+.submenu {
+  overflow: hidden;
+
+  .sub-item {
+    // Thụt lề cho mục con so với padding của .nav-item
+    // 16px (padding gốc) + 24px (thụt thêm) = 40px
+    padding-left: 40px !important;
+
+    // Bỏ icon ở mục con cho gọn
+    mat-icon {
+      display: none;
+    }
+  }
+}

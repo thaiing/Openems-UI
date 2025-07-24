@@ -1,0 +1,45 @@
+<header class="header">
+  <div class="header-left">
+    <button mat-icon-button (click)="toggleSidebarDesktop()" class="menu-toggle-btn">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <img src="assets/images/MAXiComLogo.png" alt="MaxiCom Logo" class="logo-img">
+  </div>
+  <div class="header-right">
+    <button mat-icon-button class="action-btn">
+      <mat-icon>notifications_none</mat-icon>
+    </button>
+    <button mat-icon-button class="action-btn profile-btn" (click)="openAuthDialog()">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+  </div>
+</header>
+
+<header class="mobile-header">
+  <button mat-icon-button (click)="toggleSidebarMobile()">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <div class="mobile-title-group">
+    <img src="assets/images/MAXiComLogo.png" alt="MaxiCom Logo" class="logo-img">
+    <span class="page-title" *ngIf="currentPageTitle">{{ currentPageTitle }}</span>
+  </div>
+  <button mat-icon-button class="action-btn profile-btn" (click)="openAuthDialog()">
+    <mat-icon>account_circle</mat-icon>
+  </button>
+</header>
+
+
+<div class="main-container"
+     [class.sidebar-mobile-visible]="isSidebarMobileVisible"
+     [class.sidebar-desktop-collapsed]="isSidebarDesktopCollapsed">
+
+  <div class="sidebar-overlay" (click)="toggleSidebarMobile()"></div>
+
+  <div class="sidebar">
+    <app-secondary-sidebar (linkClicked)="closeMobileSidebar()"></app-secondary-sidebar>
+  </div>
+
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
