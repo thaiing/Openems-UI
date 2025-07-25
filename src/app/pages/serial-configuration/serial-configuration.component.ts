@@ -1,8 +1,8 @@
 import {Component, OnInit, OnDestroy} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpClientModule} from '@angular/common/http';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {Subscription, of} from 'rxjs';
+import {Subscription, of, forkJoin, filter, take} from 'rxjs';
 import {catchError, switchMap, tap, map} from 'rxjs/operators';
 import {StateService} from '../../services/state.service';
 import {ApiService} from '../../services/api.service';
@@ -13,6 +13,7 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {MatCardModule} from '@angular/material/card';
 import {MatTooltipModule} from '@angular/material/tooltip';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 
 interface PortTemplate {
   key: string;
@@ -24,8 +25,9 @@ interface PortTemplate {
   selector: 'app-serial-configuration',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule,
-    MatSelectModule, MatButtonModule, MatIconModule, MatCardModule, MatTooltipModule
+    CommonModule, ReactiveFormsModule, HttpClientModule, MatProgressSpinnerModule,
+    MatFormFieldModule, MatInputModule, MatSelectModule,
+    MatButtonModule, MatIconModule, MatCardModule, MatTooltipModule
   ],
   templateUrl: './serial-configuration.component.html',
   styleUrls: ['./serial-configuration.component.scss']
@@ -34,12 +36,13 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
   ports: any[] = [];
   portTemplates: PortTemplate[] = [];
 
+  isLoading = true;
   isAdding = false;
   addForm!: FormGroup;
   editForm!: FormGroup;
   portInEditing: string | null = null;
 
-  private stateSubscription!: Subscription;
+  private dataSubscription!: Subscription;
   readonly FACTORY_PID = 'Bridge.Modbus.Serial';
 
   baudRates = [9600, 19200, 38400, 57600, 115200];
@@ -57,59 +60,89 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.addForm = this.fb.group({
-      template: [null, Validators.required],
-      baudRate: ['9600', Validators.required],
-      databits: ['8', Validators.required],
-      stopbits: ['ONE', Validators.required],
+      template: [null, Validators.required], baudRate: ['9600', Validators.required],
+      databits: ['8', Validators.required], stopbits: ['ONE', Validators.required],
       parity: ['NONE', Validators.required]
     });
     this.editForm = this.fb.group({
-      baudRate: ['', Validators.required],
-      databits: ['', Validators.required],
-      stopbits: ['', Validators.required],
-      parity: ['', Validators.required]
+      baudRate: ['', Validators.required], databits: ['', Validators.required],
+      stopbits: ['', Validators.required], parity: ['', Validators.required]
     });
 
-    this.stateSubscription = this.http.get<any>('assets/config/app-config.json')
-      .pipe(
-        catchError(error => {
-          console.error('Không tải được app-config.json. Sử dụng portTemplates rỗng.', error);
-          return of({serialPortTemplates: []});
-        }),
-        map(config => config.serialPortTemplates || []),
-        tap(templates => this.portTemplates = templates),
-        switchMap(() => this.stateService.components$)
-      )
-      .subscribe(allComponents => {
-        if (allComponents) {
-          this.ports = Object.entries(allComponents)
-            .filter(([id, config]: [string, any]) => config.factoryId === this.FACTORY_PID)
-            .map(([id, config]: [string, any]) => {
-              const props = config.properties || {};
-              return {
-                key: props.alias,
-                pid: id,
-                displayName: this.portTemplates.find(t => t.key === props.alias)?.displayName || props.alias,
-                portName: props.portName,
-                baudRate: props.baudRate,
-                databits: props.databits,
-                stopbits: props.stopbits,
-                parity: props.parity,
-              };
-            })
-            .sort((a, b) => a.key.localeCompare(b.key));
-        } else {
-          this.ports = [];
-        }
-      });
+    this.loadData();
   }
 
+  loadData(): void {
+    this.isLoading = true;
+    if (this.dataSubscription) {
+      this.dataSubscription.unsubscribe();
+    }
+
+    // Dùng forkJoin để lấy templates và PIDs dài từ Felix cùng lúc
+    this.dataSubscription = forkJoin({
+      config: this.http.get<any>('assets/config/app-config.json').pipe(catchError(() => of({serialPortTemplates: []}))),
+      felixPids: this.apiService.getFelixPids()
+    }).pipe(
+      // Sau khi có cả hai, mới lắng nghe dữ liệu chi tiết từ WebSocket
+      switchMap(({config, felixPids}) => {
+        this.portTemplates = config.serialPortTemplates || [];
+
+        // Xây dựng "bản đồ" tra cứu từ alias -> PID dài
+        const pidMap = new Map<string, string>();
+        felixPids
+          .filter(p => p.fpid === this.FACTORY_PID)
+          .forEach(p => {
+            const aliasMatch = p.nameHint?.match(/\[(.*?)\]/);
+            if (aliasMatch && aliasMatch[1]) {
+              pidMap.set(aliasMatch[1], p.id);
+            }
+          });
+
+        // Lắng nghe dữ liệu chi tiết, chờ đến khi có dữ liệu thật (khác null)
+        return this.stateService.components$.pipe(
+          filter(components => components !== null),
+          take(1), // Chỉ lấy 1 lần để forkJoin hoàn thành
+          map(allComponents => ({allComponents, pidMap})) // Gửi cả hai đi tiếp
+        );
+      })
+    ).subscribe(({allComponents, pidMap}) => {
+      // Kết hợp hai nguồn dữ liệu để tạo ra danh sách port hoàn chỉnh
+      this.ports = Object.entries(allComponents)
+        .filter(([id, config]: [string, any]) => config.factoryId === this.FACTORY_PID)
+        .map(([id, config]: [string, any]) => {
+          const props = config.properties || {};
+          const longPid = pidMap.get(id); // Tra cứu PID dài
+
+          // Chỉ thêm port vào danh sách nếu tìm thấy PID dài tương ứng
+          if (!longPid) {
+            console.warn(`Không tìm thấy PID dài cho alias: ${id}`);
+            return null;
+          }
+
+          return {
+            key: props.alias,
+            pid: longPid, // QUAN TRỌNG: Gán PID dài vào đây
+            alias: id,
+            displayName: this.portTemplates.find(t => t.key === props.alias)?.displayName || `Port [${props.alias}]`,
+            portName: props.portName,
+            baudRate: props.baudRate,
+            databits: props.databits,
+            stopbits: props.stopbits,
+            parity: props.parity,
+          };
+        })
+        .filter(port => port !== null); // Lọc bỏ những port không hợp lệ
+
+      this.isLoading = false;
+    });
+  }
 
   ngOnDestroy(): void {
-    if (this.stateSubscription) this.stateSubscription.unsubscribe();
+    if (this.dataSubscription) {
+      this.dataSubscription.unsubscribe();
+    }
   }
 
-  // --- Logic Tạo Mới ---
   showAddForm(): void {
     this.isAdding = true;
     this.addForm.reset({baudRate: '9600', databits: '8', stopbits: 'ONE', parity: 'NONE'});
@@ -120,31 +153,22 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
   }
 
   confirmAddPort(): void {
-    if (this.addForm.invalid) return;
-
+    if (this.addForm.invalid) {
+      return;
+    }
     const formValue = this.addForm.value;
     const template = this.portTemplates.find(t => t.key === formValue.template);
     if (!template) {
-      alert('Vui lòng chọn một Port để tạo.');
+      alert('Vui lòng chọn template');
       return;
     }
 
     const createConfig = {
-      apply: 'true',
-      factoryPid: this.FACTORY_PID,
-      location: '',
-      id: template.key,
-      alias: template.key,
-      enabled: 'true',
-      portName: template.portName,
-      baudRate: formValue.baudRate?.toString(),
-      databits: formValue.databits?.toString(),
-      stopbits: formValue.stopbits,
-      parity: formValue.parity,
-      enableTermination: 'false',
-      delayBeforeTx: '0',
-      delayAfterTx: '0',
-      logVerbosity: '1',
+      apply: 'true', factoryPid: this.FACTORY_PID, location: '', id: template.key,
+      alias: template.key, enabled: 'true', portName: template.portName,
+      baudRate: formValue.baudRate?.toString(), databits: formValue.databits?.toString(),
+      stopbits: formValue.stopbits, parity: formValue.parity, enableTermination: 'false',
+      delayBeforeTx: '0', delayAfterTx: '0', logVerbosity: '1',
       invalidateElementsAfterReadErrors: '1',
       propertylist: 'id,alias,enabled,portName,baudRate,databits,stopbits,parity,enableTermination,delayBeforeTx,delayAfterTx,logVerbosity,invalidateElementsAfterReadErrors'
     };
@@ -159,6 +183,7 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
           alert('Tạo port thành công!');
           this.cancelAdd();
           this.stateService.refreshState();
+          setTimeout(() => this.loadData(), 1000); // Tải lại toàn bộ dữ liệu để có PID mới
         }
       });
   }
@@ -168,7 +193,6 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
     return this.portTemplates.filter(t => !existingKeys.includes(t.key));
   }
 
-  // --- Logic Sửa và Xóa ---
   editPort(port: any): void {
     this.portInEditing = port.key;
     this.editForm.patchValue(port);
@@ -179,29 +203,30 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
   }
 
   saveChanges(port: any): void {
-    if (this.editForm.invalid) return;
-    const formValue = this.editForm.value;
+    if (this.editForm.invalid) {
+      return;
+    }
+    if (!port.pid) {
+      alert('Lỗi: Không tìm thấy PID của port để lưu. Vui lòng thử tải lại trang.');
+      return;
+    }
 
+    const formValue = this.editForm.value;
     const updateConfig = {
       apply: 'true',
-      // location: '',
-      // id: port.key,
-      alias: port.key,
-      // enabled: 'true',
-      // portName: port.portName,
+      alias: port.alias,
+      enabled: 'true',
+      portName: port.portName,
       baudRate: formValue.baudRate?.toString(),
       databits: formValue.databits?.toString(),
       stopbits: formValue.stopbits,
       parity: formValue.parity,
-      // enableTermination: 'false',
-      // delayBeforeTx: '0',
-      // delayAfterTx: '0',
-      // logVerbosity: '1',
-      // invalidateElementsAfterReadErrors: '1',
-      propertylist: 'id,alias,enabled,portName,baudRate,databits,stopbits,parity,enableTermination,delayBeforeTx,delayAfterTx,logVerbosity,invalidateElementsAfterReadErrors'
+      propertylist: 'alias,enabled,portName,baudRate,databits,stopbits,parity'
     };
 
+    // ĐƯỜNG DẪN NÀY BÂY GIỜ SẼ ĐÚNG VÌ port.pid LÀ PID DÀI
     const fullPidPath = `/system/console/configMgr/${port.pid}`;
+
     this.apiService.updateSerialPortConfigFelix(fullPidPath, updateConfig)
       .pipe(catchError(err => {
         alert('Lưu cấu hình không thành công!\n' + (err.error || err.message));
@@ -209,19 +234,26 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
       }))
       .subscribe(result => {
         if (result) {
+          alert('Cập nhật thành công!');
           this.cancelEdit();
           this.stateService.refreshState();
+          setTimeout(() => this.loadData(), 1000); // Tải lại để cập nhật giá trị mới
         }
       });
   }
 
   deletePort(port: any): void {
+    if (!port.pid) {
+      alert('Lỗi: Không tìm thấy PID của port để xóa. Vui lòng thử tải lại trang.');
+      return;
+    }
     if (confirm(`Bạn có chắc chắn muốn xóa ${port.displayName} không?`)) {
       const fullPidPath = `/system/console/configMgr/${port.pid}`;
       this.apiService.deleteSerialPort(fullPidPath)
         .subscribe(() => {
           alert('Xóa port thành công!');
           this.stateService.refreshState();
+          setTimeout(() => this.loadData(), 1000);
         });
     }
   }

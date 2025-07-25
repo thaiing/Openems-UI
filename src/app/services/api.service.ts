@@ -40,7 +40,6 @@ export class ApiService {
     }
   }
 
-  // ---------- WEBSOCKET JSON-RPC (giữ nguyên) ----------
   private connect(): void {
     this.socket$ = webSocket({
       url: '/jsonrpc',
@@ -48,7 +47,6 @@ export class ApiService {
       serializer: (value) => JSON.stringify(value),
       openObserver: {
         next: () => {
-          console.log('WebSocket connection established');
           this.isConnected = true;
           this.authenticate();
         }
@@ -56,22 +54,13 @@ export class ApiService {
     });
 
     this.socket$.pipe(
-      retry({delay: () => timer(5000)}),
-      tap(message => console.log('WebSocket Received:', message)),
-      catchError(error => {
-        console.error('WebSocket Error:', error);
-        return EMPTY;
-      })
+      retry({delay: () => timer(5000)})
     ).subscribe(message => this.messageSubject.next(message));
   }
 
   private async authenticate(): Promise<void> {
     try {
-      const result = await firstValueFrom(this.rpc('authenticateWithPassword', {
-        username: 'admin',
-        password: 'admin'
-      }));
-      console.log('Authentication successful:', result);
+      await firstValueFrom(this.rpc('authenticateWithPassword', {username: 'admin', password: 'admin'}));
       this.getEdgeConfig().subscribe();
     } catch (error) {
       console.error('Authentication failed:', error);
@@ -99,47 +88,30 @@ export class ApiService {
     const innerId = uuidv4();
     const request = {
       method: 'edgeRpc',
-      params: {
-        edgeId: this.edgeId,
-        payload: {
-          jsonrpc: '2.0',
-          id: innerId,
-          method: 'getEdgeConfig',
-          params: {}
-        }
-      }
+      params: {edgeId: this.edgeId, payload: {jsonrpc: '2.0', id: innerId, method: 'getEdgeConfig', params: {}}}
     };
     return this.rpc(request.method, request.params);
   }
 
-  public updateConfig(componentId: string, properties: any): Observable<any> {
-    const innerId = uuidv4();
-    const request = {
-      method: 'edgeRpc',
-      params: {
-        edgeId: this.edgeId,
-        payload: {
-          jsonrpc: '2.0',
-          id: innerId,
-          method: 'updateComponentConfig',
-          params: {componentId, properties}
+  // HÀM QUAN TRỌNG ĐỂ LẤY PID DÀI
+  getFelixPids(): Observable<any[]> {
+    const url = '/system/console/configMgr';
+    return this.http.get(url, {responseType: 'text'}).pipe(
+      map(htmlString => {
+        const match = htmlString.match(/var configData = (\{.*?\});/);
+        if (match && match[1]) {
+          try {
+            const configData = JSON.parse(match[1]);
+            return configData.pids || [];
+          } catch (e) {
+            return [];
+          }
         }
-      }
-    };
-    return this.rpc(request.method, request.params);
+        return [];
+      })
+    );
   }
 
-
-  // ---------- HTTP POST LƯU SERIAL PORT (Felix - 8080) ----------
-  /**
-   * Lưu cấu hình Serial Port qua HTTP Felix Console (cổng 8080)
-   * Sử dụng cho nút "Save" trên trang cấu hình Serial Port
-   */
-  /**
-   * MỚI: Tạo một Serial Port mới từ Factory.
-   * @param factoryPid PID của Factory, ví dụ: 'Bridge.Modbus.Serial'.
-   * @param config Các thuộc tính cho port mới, quan trọng nhất là 'alias'.
-   */
   createSerialPort(factoryPid: string, config: any): Observable<any> {
     const url = `/system/console/configMgr/${factoryPid}`;
     const body = new URLSearchParams();
@@ -152,11 +124,6 @@ export class ApiService {
     return this.http.post(url, body.toString(), {headers, responseType: 'text'});
   }
 
-  /**
-   * Cập nhật cấu hình Serial Port đã có.
-   * @param fullPidPath Đường dẫn đầy đủ đến PID của component.
-   * @param config Các thuộc tính cần cập nhật (KHÔNG chứa factoryPid).
-   */
   updateSerialPortConfigFelix(fullPidPath: string, config: any): Observable<any> {
     const body = new URLSearchParams();
     Object.entries(config).forEach(([key, value]) => {
@@ -166,10 +133,6 @@ export class ApiService {
     return this.http.post(fullPidPath, body.toString(), {headers, responseType: 'text'});
   }
 
-  /**
-   * Xóa một Serial Port đã có.
-   * @param fullPidPath Đường dẫn đầy đủ của PID cần xóa.
-   */
   deleteSerialPort(fullPidPath: string): Observable<any> {
     const body = new URLSearchParams();
     body.set('apply', 'true');
