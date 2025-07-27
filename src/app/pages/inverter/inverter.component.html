@@ -1,106 +1,128 @@
 <div class="page-container">
   <div class="page-header">
-    <h1>Inverter Management</h1>
-    <button mat-flat-button color="primary" (click)="toggleAddForm()">
+    <h1>Inverter Configuration</h1>
+    <button mat-fab extended color="primary" *ngIf="!isAdding" (click)="showAddForm()" [disabled]="isAddButtonDisabled">
       <mat-icon>add</mat-icon>
-      Add New Inverter
+      Add Inverter
     </button>
   </div>
 
-  <mat-card *ngIf="showAddForm" class="form-card">
-    <mat-card-header>
-      <mat-card-title>New Inverter Details</mat-card-title>
-    </mat-card-header>
+  <mat-card *ngIf="isAdding" class="form-container">
+    <mat-card-title>Add New Inverter</mat-card-title>
     <mat-card-content>
-      <form [formGroup]="addInverterForm" (ngSubmit)="onAddInverter()">
-        <div class="form-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Tên</mat-label>
-            <input matInput formControlName="name">
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Hãng</mat-label>
-            <mat-select formControlName="brand">
-              <mat-option *ngFor="let brand of inverterBrands" [value]="brand">{{ brand }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Pmax</mat-label>
-            <input matInput formControlName="pmax" type="number">
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Serial Port</mat-label>
-            <mat-select formControlName="serialPort">
-              <mat-option *ngFor="let port of serialPorts" [value]="port">{{ port }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Modbus ID</mat-label>
-            <input matInput formControlName="modbusId" type="number">
-          </mat-form-field>
-        </div>
-        <div class="action-buttons">
-          <button mat-flat-button color="primary" type="submit" [disabled]="addInverterForm.invalid">Add Inverter
-          </button>
-          <button mat-stroked-button type="button" (click)="toggleAddForm()">Cancel</button>
-        </div>
+      <form [formGroup]="addForm" class="add-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Hãng Inverter</mat-label>
+          <mat-select formControlName="brand">
+            <mat-option *ngFor="let brand of brands" [value]="brand.factoryId">
+              {{ brand.name }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="addForm.get('brand')?.hasError('required')">Vui lòng chọn hãng</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Công suất tối đa (W)</mat-label>
+          <input matInput type="number" formControlName="maxActivePower" placeholder="Ví dụ: 5000">
+          <mat-error *ngIf="addForm.get('maxActivePower')?.hasError('required')">Vui lòng nhập công suất</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Serial Port</mat-label>
+          <mat-select formControlName="modbusPort">
+            <mat-option *ngFor="let port of serialPorts" [value]="port">
+              {{ port }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="addForm.get('modbusPort')?.hasError('required')">Vui lòng chọn port</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Modbus Unit-ID</mat-label>
+          <input matInput type="number" formControlName="modbusUnitId">
+          <mat-error *ngIf="addForm.get('modbusUnitId')?.hasError('required')">Vui lòng nhập Unit-ID</mat-error>
+        </mat-form-field>
       </form>
     </mat-card-content>
+    <mat-card-actions align="end">
+      <button mat-button (click)="cancelAdd()">Cancel</button>
+      <button mat-flat-button color="primary" (click)="confirmAdd()" [disabled]="addForm.invalid">Create Inverter
+      </button>
+    </mat-card-actions>
   </mat-card>
 
-  <div class="inverter-list">
-    <mat-card *ngFor="let inverter of inverters" class="inverter-card">
-      <div *ngIf="!inverter.isEditing">
-        <mat-card-content class="display-content">
-          <div class="inverter-details">
-            <div class="detail-item"><span>STT</span><strong>{{ inverter.id }}</strong></div>
-            <div class="detail-item"><span>Tên</span><strong>{{ inverter.name }}</strong></div>
-            <div class="detail-item"><span>Hãng</span><strong>{{ inverter.brand }}</strong></div>
-            <div class="detail-item"><span>Pmax</span><strong>{{ inverter.pmax }}</strong></div>
-            <div class="detail-item"><span>Serial Port</span><strong>{{ inverter.serialPort }}</strong></div>
-            <div class="detail-item"><span>Modbus ID</span><strong>{{ inverter.modbusId }}</strong></div>
-          </div>
-          <div class="inverter-actions">
-            <button mat-icon-button color="primary" (click)="editInverter(inverter)">
-              <mat-icon>edit</mat-icon>
-            </button>
-          </div>
-        </mat-card-content>
+  <mat-card class="list-container">
+    <div class="list-header">
+      <div class="col col-alias">Alias</div>
+      <div class="col col-brand">Hãng</div>
+      <div class="col col-power">Công suất (W)</div>
+      <div class="col col-port">Port</div>
+      <div class="col col-unit-id">Modbus Unit-ID</div>
+      <div class="col col-actions">Actions</div>
+    </div>
+
+    <div *ngIf="isLoading" class="loading-state">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <div *ngIf="!isLoading && inverters.length === 0" class="empty-state">
+      <p>Chưa có Inverter nào được cấu hình.</p>
+    </div>
+
+    <div *ngFor="let inverter of inverters" class="list-row-wrapper">
+      <div class="list-row" *ngIf="inverterInEditing !== inverter.alias">
+        <div class="col col-alias" data-label="Alias">{{ inverter.alias }}</div>
+        <div class="col col-brand" data-label="Hãng">{{ inverter.brandName }}</div>
+        <div class="col col-power" data-label="Công suất (W)">{{ inverter.maxActivePower }}</div>
+        <div class="col col-port" data-label="Port">{{ inverter.modbusPort }}</div>
+        <div class="col col-unit-id" data-label="Modbus Unit-ID">{{ inverter.modbusUnitId }}</div>
+        <div class="col col-actions">
+          <button mat-icon-button (click)="editInverter(inverter)" matTooltip="Edit Inverter">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="deleteInverter(inverter)" matTooltip="Delete Inverter">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
       </div>
 
-      <div *ngIf="inverter.isEditing">
-        <mat-card-content>
-          <form [formGroup]="editInverterForm" (ngSubmit)="saveInverter(inverter)">
-            <div class="form-grid">
-              <mat-form-field appearance="outline">
-                <mat-label>Tên</mat-label>
-                <input matInput formControlName="name"></mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Hãng</mat-label>
-                <mat-select formControlName="brand">
-                  <mat-option *ngFor="let brand of inverterBrands" [value]="brand">{{ brand }}</mat-option>
-                </mat-select>
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Pmax</mat-label>
-                <input matInput formControlName="pmax" type="number"></mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Serial Port</mat-label>
-                <mat-select formControlName="serialPort">
-                  <mat-option *ngFor="let port of serialPorts" [value]="port">{{ port }}</mat-option>
-                </mat-select>
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Modbus ID</mat-label>
-                <input matInput formControlName="modbusId" type="number"></mat-form-field>
-            </div>
-            <div class="action-buttons">
-              <button mat-flat-button color="primary" type="submit" [disabled]="editInverterForm.invalid">Save</button>
-              <button mat-stroked-button type="button" (click)="cancelEdit(inverter)">Cancel</button>
-            </div>
-          </form>
-        </mat-card-content>
+      <div class="edit-form-container" *ngIf="inverterInEditing === inverter.alias">
+        <form [formGroup]="editForm" class="list-row edit-row">
+          <div class="col col-alias" data-label="Alias">{{ inverter.alias }}</div>
+          <div class="col col-brand" data-label="Hãng">{{ inverter.brandName }}</div>
+
+          <div class="col col-power" data-label="Công suất (W)">
+            <mat-form-field appearance="outline" class="edit-field">
+              <input matInput type="number" formControlName="maxActivePower">
+            </mat-form-field>
+          </div>
+
+          <div class="col col-port" data-label="Port">
+            <mat-form-field appearance="outline" class="edit-field">
+              <mat-select formControlName="modbusPort">
+                <mat-option *ngFor="let port of serialPorts" [value]="port">{{ port }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="col col-unit-id" data-label="Modbus Unit-ID">
+            <mat-form-field appearance="outline" class="edit-field">
+              <input matInput type="number" formControlName="modbusUnitId">
+            </mat-form-field>
+          </div>
+
+          <div class="col col-actions">
+            <button mat-icon-button (click)="saveChanges(inverter)" [disabled]="editForm.invalid"
+                    matTooltip="Save Changes">
+              <mat-icon color="primary">save</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelEdit()" matTooltip="Cancel Edit">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </div>
+        </form>
       </div>
-    </mat-card>
-  </div>
+
+    </div>
+  </mat-card>
 </div>

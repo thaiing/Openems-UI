@@ -1,119 +1,121 @@
-:host {
-  display: block;
-}
-
-// Biến màu để dễ quản lý
-$primary-color: #012596;
-$border-color: #e9eef2;
-$label-color: #6c757d;
-
 .page-container {
   padding: 24px;
 }
 
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 24px;
 
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 24px;
+  }
 }
 
-.page-header h1 {
-  font-size: 24px;
-  font-weight: 600;
-  color: $primary-color;
+.form-container {
   margin-bottom: 24px;
 }
 
-
-// --- Style chung ---
-.action-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.form-grid {
+.add-form {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
 }
 
-// --- Card thêm mới ---
-.form-card {
-  margin-bottom: 24px;
+.list-container {
+  overflow-x: auto; // Thêm thanh cuộn ngang khi cần
 }
 
-// --- Danh sách Inverter ---
-.inverter-list {
+.list-header,
+.list-row {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  padding: 12px 8px; // Giảm padding ngang
+  border-bottom: 1px solid #e0e0e0;
+  min-width: 700px; // Đặt chiều rộng tối thiểu
 }
 
-.inverter-card {
-  // Loại bỏ padding mặc định của mat-card để mat-card-content kiểm soát
-  padding: 0 !important;
+.list-header {
+  font-weight: 600;
+  background-color: #f8f9fa;
 }
 
-// Chế độ hiển thị
-.display-content {
+.list-row:last-child {
+  border-bottom: none;
+}
+
+.col {
+  padding: 0 8px;
+  word-wrap: break-word;
+  // Phân bổ độ rộng cơ bản
+  flex: 1 1 15%;
+}
+
+// Tùy chỉnh độ rộng cho các cột cụ thể
+.col-alias {
+  flex: 1 1 15%;
+}
+
+.col-brand {
+  flex: 1 1 20%;
+}
+
+.col-power {
+  flex: 1 1 15%;
+}
+
+.col-port {
+  flex: 1 1 15%;
+}
+
+.col-unit-id {
+  flex: 1 1 15%;
+}
+
+.col-actions {
+  flex: 0 0 100px; // Cố định chiều rộng cột Actions
+  justify-content: flex-end;
   display: flex;
-  justify-content: space-between;
+}
+
+.loading-state,
+.empty-state {
+  display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 16px;
+  padding: 48px;
+  color: #6c757d;
 }
 
-.inverter-details {
-  display: grid;
-  grid-template-columns: 0.5fr 1.5fr 1fr 1fr 1fr 1fr;
-  gap: 16px;
-  width: 100%;
-  align-items: center;
-
-  .detail-item {
-    span {
-      font-size: 13px;
-      color: $label-color;
-      display: block;
-      margin-bottom: 2px;
-    }
-
-    strong {
-      font-size: 15px;
-      font-weight: 500;
-    }
-  }
-}
-
-// --- RESPONSIVE ---
-@media (max-width: 992px) {
-  .inverter-details {
-    grid-template-columns: repeat(3, 1fr); // 3 cột trên tablet
-    gap: 20px;
-  }
-}
-
+// Responsive cho màn hình nhỏ
 @media (max-width: 768px) {
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+  .list-header {
+    display: none;
   }
-
-  .display-content {
+  .list-row {
     flex-direction: column;
     align-items: stretch;
+    padding: 8px 16px;
+    min-width: unset;
   }
+  .col {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px dashed #e0e0e0;
 
-  .inverter-details {
-    grid-template-columns: repeat(2, 1fr); // 2 cột trên mobile
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &::before {
+      content: attr(data-label);
+      font-weight: 600;
+      padding-right: 16px;
+    }
   }
-
-  .inverter-actions {
-    align-self: flex-end;
-    margin-top: 12px;
+  .col-actions {
+    justify-content: center;
   }
 }

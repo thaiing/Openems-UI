@@ -11,8 +11,58 @@
       "portName": "/dev/ttyS1"
     }
   ],
-  "inverterSettings": {
-  },
-  "networkConfig": {
+  "inverterSetup": {
+    "currentTier": "level1",
+    "tiers": {
+      "level1": {
+        "label": "Gói Cơ Bản",
+        "maxInverters": 10,
+        "maxTotalPowerKW": 400
+      },
+      "level2": {
+        "label": "Gói Nâng Cao",
+        "maxInverters": 15,
+        "maxTotalPowerKW": 700
+      },
+      "level3": {
+        "label": "Gói Chuyên Nghiệp",
+        "maxInverters": 20,
+        "maxTotalPowerKW": 1000
+      }
+    },
+    "inverterBrands": [
+      {
+        "name": "Fronius",
+        "factoryId": "PV-Inverter.Fronius"
+      },
+      {
+        "name": "Huawei",
+        "factoryId": "PV-Inverter.Huawei"
+      },
+      {
+        "name": "KACO blueplanet",
+        "factoryId": "PV-Inverter.KACO.blueplanet"
+      },
+      {
+        "name": "Kostal",
+        "factoryId": "PV-Inverter.Kostal"
+      },
+      {
+        "name": "SMA Sunny Tripower",
+        "factoryId": "PV-Inverter.SMA.SunnyTripower"
+      },
+      {
+        "name": "Solar-Log",
+        "factoryId": "PV-Inverter.Solarlog"
+      },
+      {
+        "name": "SolarEdge",
+        "factoryId": "PV-Inverter.SolarEdge"
+      },
+      {
+        "name": "Cluster",
+        "factoryId": "PvInverter.Cluster"
+      }
+    ]
   }
 }

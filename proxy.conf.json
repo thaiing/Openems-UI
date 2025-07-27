@@ -1,11 +1,11 @@
 {
   "/jsonrpc": {
-    "target": "http://192.168.4.48:8085",
+    "target": "http://222.252.22.158:5559",
     "secure": false,
     "ws": true
   },
   "/system/console": {
-    "target": "http://192.168.4.48:8080",
+    "target": "http://222.252.22.158:5555",
     "secure": false,
     "auth": "admin:admin"
   }
