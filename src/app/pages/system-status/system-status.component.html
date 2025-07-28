@@ -9,11 +9,10 @@
   </div>
 
   <div *ngIf="!isLoading" class="status-grid">
-    <mat-card class="info-card">
+    <mat-card class="info-card system-card">
       <mat-card-header>
         <mat-icon mat-card-avatar>info_outline</mat-icon>
         <mat-card-title>System Information</mat-card-title>
-        <mat-card-subtitle>Thông tin chung của thiết bị</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <div class="info-row">
@@ -21,54 +20,58 @@
           <span class="info-value">{{ serialNumber }}</span>
         </div>
         <div class="info-row" *ngIf="activeTier">
-          <span class="info-label">Gói Cấu Hình:</span>
-          <span class="info-value">{{ activeTier.maxInverters }} Inverters / {{ activeTier.maxTotalPowerKW }} kWp</span>
+          <span class="info-label">Configuration Tier:</span>
+          <span class="info-value">
+            <strong>{{ activeTier.label }}</strong>
+            <br>
+            ({{ activeTier.maxInverters }}Inverters / {{ activeTier.maxTotalPowerKW }} kWp)
+          </span>
         </div>
       </mat-card-content>
     </mat-card>
 
-    <mat-card class="info-card">
+    <mat-card class="info-card serial-card">
       <mat-card-header>
         <mat-icon mat-card-avatar>settings_ethernet</mat-icon>
-        <mat-card-title>Serial Config</mat-card-title>
-        <mat-card-subtitle>Tổng quan cấu hình cổng</mat-card-subtitle>
+        <mat-card-title>Serial Ports</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <div class="info-row">
-          <span class="info-label">Số cổng đã cấu hình:</span>
-          <span class="info-value">{{ serialPortCount }}</span>
+        <div *ngIf="serialPortDetails.length === 0" class="info-row">
+          <span class="info-label">No ports configured.</span>
+        </div>
+        <div *ngFor="let detail of serialPortDetails" class="info-row">
+          <span class="info-label">{{ detail.split(':')[0] }}:</span>
+          <span class="info-value">{{ detail.split(':')[1] }}</span>
         </div>
       </mat-card-content>
     </mat-card>
 
-    <mat-card class="info-card">
+    <mat-card class="info-card inverter-card">
       <mat-card-header>
-        <mat-icon mat-card-avatar>solar_power</mat-icon>
+        <mat-icon mat-card-avatar>flash_on</mat-icon>
         <mat-card-title>Inverter</mat-card-title>
-        <mat-card-subtitle>Tổng quan hệ thống Inverter</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <div class="info-row">
-          <span class="info-label">Tổng số Inverter:</span>
+          <span class="info-label">Total Inverters:</span>
           <span class="info-value">{{ inverterCount }} / {{ activeTier?.maxInverters || 'N/A' }}</span>
         </div>
         <div class="info-row">
-          <span class="info-label">Tổng công suất:</span>
+          <span class="info-label">Total Power:</span>
           <span class="info-value">{{ totalInverterPowerKW.toFixed(2) }} / {{ activeTier?.maxTotalPowerKW || 'N/A' }}
             kWp</span>
         </div>
       </mat-card-content>
     </mat-card>
 
-    <mat-card class="info-card">
+    <mat-card class="info-card meter-card">
       <mat-card-header>
         <mat-icon mat-card-avatar>speed</mat-icon>
         <mat-card-title>Meter</mat-card-title>
-        <mat-card-subtitle>Tổng quan hệ thống đo lường</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <div class="info-row">
-          <span class="info-label">Tổng số Meter:</span>
+          <span class="info-label">Total Meters:</span>
           <span class="info-value">{{ meterCount }}</span>
         </div>
         <div class="info-row">
@@ -78,15 +81,14 @@
       </mat-card-content>
     </mat-card>
 
-    <mat-card class="info-card">
+    <mat-card class="info-card storage-card">
       <mat-card-header>
         <mat-icon mat-card-avatar>battery_full</mat-icon>
         <mat-card-title>Storage</mat-card-title>
-        <mat-card-subtitle>Tổng quan hệ thống lưu trữ</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <div class="info-row">
-          <span class="info-label">Số thiết bị lưu trữ:</span>
+          <span class="info-label">Storage Devices:</span>
           <span class="info-value">{{ storageCount }}</span>
         </div>
       </mat-card-content>

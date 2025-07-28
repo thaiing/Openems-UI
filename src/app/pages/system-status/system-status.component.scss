@@ -28,30 +28,75 @@
 
 .status-grid {
   display: grid;
+  // SỬA LỖI: Giảm chiều rộng tối thiểu của thẻ để linh hoạt hơn
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 24px;
 }
 
 .info-card {
+  &.system-card {
+    background-color: #f0f4ff;
+  }
+
+  &.serial-card {
+    background-color: #e8f5e9;
+  }
+
+  &.inverter-card {
+    background-color: #fff8e1;
+  }
+
+  &.meter-card {
+    background-color: #fce4ec;
+  }
+
+  &.storage-card {
+    background-color: #e0f7fa;
+  }
+
   mat-card-header {
     padding-bottom: 16px;
   }
 
   .mat-mdc-card-avatar {
-    background-color: #e3f2fd;
-    color: #012596;
     display: flex;
     align-items: center;
     justify-content: center;
   }
 }
 
+.system-card .mat-mdc-card-avatar {
+  background-color: #dbe5ff;
+  color: #3f51b5;
+}
+
+.serial-card .mat-mdc-card-avatar {
+  background-color: #c8e6c9;
+  color: #388e3c;
+}
+
+.inverter-card .mat-mdc-card-avatar {
+  background-color: #ffecb3;
+  color: #f57f17;
+}
+
+.meter-card .mat-mdc-card-avatar {
+  background-color: #f8bbd0;
+  color: #c2185b;
+}
+
+.storage-card .mat-mdc-card-avatar {
+  background-color: #b2ebf2;
+  color: #0097a7;
+}
+
 .info-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 12px 0;
   font-size: 15px;
-  border-bottom: 1px solid #eef2f7;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 
   &:last-child {
     border-bottom: none;
@@ -59,11 +104,18 @@
 
   .info-label {
     color: #6c757d;
+    white-space: nowrap; // Ngăn không cho nhãn bị xuống dòng
+    padding-right: 16px; // Thêm khoảng cách
   }
 
   .info-value {
     font-weight: 500;
     color: #343a40;
+    text-align: right;
+
+    strong {
+      font-weight: 600;
+    }
 
     &.poi-value {
       font-weight: 600;

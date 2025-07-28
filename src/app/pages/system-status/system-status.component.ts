@@ -2,7 +2,7 @@ import {Component, OnInit, OnDestroy} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {CommonModule} from '@angular/common';
 import {Subscription, of, forkJoin, filter, take} from 'rxjs';
-import {catchError, switchMap, map, tap} from 'rxjs/operators'; // SỬA LỖI: Thêm switchMap
+import {catchError, switchMap, map, tap} from 'rxjs/operators';
 import {StateService} from '../../services/state.service';
 import {MatCardModule} from '@angular/material/card';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
@@ -11,8 +11,14 @@ import {ApiService} from '../../services/api.service';
 
 // --- Interfaces ---
 interface TierConfig {
+  label: string;
   maxInverters: number;
   maxTotalPowerKW: number;
+}
+
+interface PortTemplate {
+  key: string;
+  displayName: string;
 }
 
 interface AppConfig {
@@ -20,7 +26,7 @@ interface AppConfig {
   inverterSetup?: { currentTier: string; tiers: { [key: string]: TierConfig }; inverterBrands: any[]; };
   meterSetup?: { meterBrands: any[]; meterTypes: any[] };
   storageSetup?: { storageBrands: any[]; };
-  serialPortTemplates?: any[];
+  serialPortTemplates?: PortTemplate[];
 }
 
 @Component({
@@ -37,12 +43,12 @@ export class SystemStatusComponent implements OnInit, OnDestroy {
   serialNumber = 'N/A';
   activeTier: TierConfig | null = null;
 
-  // Component Counts & Stats
-  serialPortCount = 0;
+  // Component Stats
+  serialPortDetails: string[] = []; // Sửa: Để lưu chi tiết port
   inverterCount = 0;
   totalInverterPowerKW = 0;
   meterCount = 0;
-  poiMeterAlias = 'Chưa có';
+  poiMeterAlias = 'Not Set';
   storageCount = 0;
 
   private dataSubscription!: Subscription;
@@ -69,7 +75,7 @@ export class SystemStatusComponent implements OnInit, OnDestroy {
 
     const config$ = this.http.get<AppConfig>('assets/config/app-config.json').pipe(
       catchError((err) => {
-        console.error("Không thể tải app-config.json", err);
+        console.error("Cannot load app-config.json", err);
         return of({} as AppConfig);
       })
     );
@@ -87,30 +93,37 @@ export class SystemStatusComponent implements OnInit, OnDestroy {
           map(allComponents => ({allComponents, config}))
         );
       })
-    ).subscribe(({allComponents, config}: { allComponents: any, config: AppConfig }) => { // SỬA LỖI: Thêm kiểu dữ liệu rõ ràng
+    ).subscribe(({allComponents, config}) => {
       const components = Object.entries(allComponents);
 
+      // Xử lý Serial Port
+      const serialPortTemplates = config.serialPortTemplates || [];
+      const serialPortComponents = components.filter(([id, cfg]: [string, any]) => cfg.factoryId === 'Bridge.Modbus.Serial');
+      this.serialPortDetails = serialPortComponents.map(([id, cfg]: [string, any]) => {
+        const props = cfg.properties;
+        const template = serialPortTemplates.find(t => t.key === id);
+        const displayName = template ? template.displayName : id;
+
+        const parity = (props.parity || 'NONE').charAt(0);
+        const stopbits = (props.stopbits === 'ONE') ? '1' : (props.stopbits === 'TWO' ? '2' : '1.5');
+        return `${displayName}: ${props.baudRate}-${props.databits}${parity}${stopbits}`;
+      });
+
+      // Xử lý Inverter
       const inverterFactoryIds = config.inverterSetup?.inverterBrands.map(b => b.factoryId) || [];
-      const meterFactoryIds = config.meterSetup?.meterBrands.map(b => b.factoryId) || [];
-      const storageFactoryIds = config.storageSetup?.storageBrands.map(b => b.factoryId) || [];
-
-      this.serialPortCount = components.filter(([id, cfg]: [string, any]) => cfg.factoryId === 'Bridge.Modbus.Serial').length;
-
       const inverters = components.filter(([id, cfg]: [string, any]) => inverterFactoryIds.includes(cfg.factoryId));
       this.inverterCount = inverters.length;
       this.totalInverterPowerKW = inverters.reduce((sum, [id, cfg]: [string, any]) => sum + (cfg.properties.maxActivePower / 1000), 0);
 
+      // Xử lý Meter
+      const meterFactoryIds = config.meterSetup?.meterBrands.map(b => b.factoryId) || [];
       const meters = components.filter(([id, cfg]: [string, any]) => meterFactoryIds.includes(cfg.factoryId));
       this.meterCount = meters.length;
-
-      // SỬA LỖI: Xử lý an toàn hơn
       const poiMeter = meters.find(([id, cfg]: [string, any]) => cfg.properties.type === 'GRID');
-      if (poiMeter && poiMeter[1]) {
-        this.poiMeterAlias = (poiMeter[1] as any).properties.alias;
-      } else {
-        this.poiMeterAlias = 'Chưa có';
-      }
+      this.poiMeterAlias = poiMeter && poiMeter[1] ? (poiMeter[1] as any).properties.alias : 'Not Set';
 
+      // Xử lý Storage
+      const storageFactoryIds = config.storageSetup?.storageBrands.map(b => b.factoryId) || [];
       this.storageCount = components.filter(([id, cfg]: [string, any]) => storageFactoryIds.includes(cfg.factoryId)).length;
 
       this.isLoading = false;
