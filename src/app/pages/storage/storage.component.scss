@@ -1,3 +1,4 @@
+// Kế thừa style từ trang Meter/Inverter để đồng bộ
 :host {
   display: block;
 }
@@ -6,6 +7,7 @@
 $primary-color: #012596;
 $border-color: #e9eef2;
 $label-color: #6c757d;
+$text-color: #343a40;
 
 .page-container {
   padding: 24px;
@@ -21,11 +23,15 @@ $label-color: #6c757d;
     font-size: 24px;
     font-weight: 600;
     color: $primary-color;
-    margin-bottom: 24px;
+    margin: 0;
   }
 }
 
-// --- Style chung ---
+// --- Card thêm mới ---
+.form-card {
+  margin-bottom: 24px;
+}
+
 .action-buttons {
   display: flex;
   justify-content: flex-end;
@@ -40,23 +46,43 @@ $label-color: #6c757d;
   align-items: center;
 }
 
-// --- Card thêm mới ---
-.form-card {
-  margin-bottom: 24px;
-}
-
-// --- Danh sách Storage ---
-.storage-list {
+// --- Danh sách ---
+.list-container {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.storage-card {
+.list-header {
+  display: flex;
+  gap: 16px;
+  padding: 0 24px;
+  font-weight: 600;
+  color: $label-color;
+  font-size: 13px;
+
+  .detail-item {
+    flex: 1;
+  }
+
+  .stt-header {
+    flex: 0 0 50px;
+  }
+
+  .actions-header {
+    flex: 0 0 100px;
+    text-align: right;
+  }
+}
+
+.item-card {
   padding: 0 !important;
 }
 
-// Chế độ hiển thị
+.display-content, .edit-container {
+  padding: 16px 24px;
+}
+
 .display-content {
   display: flex;
   justify-content: space-between;
@@ -64,54 +90,75 @@ $label-color: #6c757d;
   gap: 16px;
 }
 
-.storage-details {
-  display: grid;
-  // Cập nhật lại grid để có 5 cột
-  grid-template-columns: 0.5fr 1.5fr 1fr 1fr 1fr;
+.item-details {
+  display: flex;
   gap: 16px;
   width: 100%;
   align-items: center;
 
   .detail-item {
-    span {
-      font-size: 13px;
-      color: $label-color;
-      display: block;
-      margin-bottom: 2px;
-    }
+    flex: 1;
 
     strong {
       font-size: 15px;
       font-weight: 500;
+      color: $text-color;
     }
   }
+
+  .stt-item {
+    flex: 0 0 50px;
+  }
+}
+
+.item-actions {
+  flex: 0 0 100px;
+  text-align: right;
+}
+
+.loading-state, .empty-state {
+  padding: 48px;
+  text-align: center;
+  color: $label-color;
+}
+
+.edit-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
 // --- RESPONSIVE ---
 @media (max-width: 992px) {
-  .storage-details {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+  .list-header {
+    display: none;
   }
-}
-
-@media (max-width: 768px) {
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
   .display-content {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .storage-details {
-    grid-template-columns: repeat(2, 1fr);
+  .item-details {
+    display: block;
+
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px dashed $border-color;
+
+      &:first-child {
+        border-top: 1px dashed $border-color;
+      }
+
+      &::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: $label-color;
+      }
+    }
   }
 
-  .storage-actions {
+  .item-actions {
     align-self: flex-end;
     margin-top: 12px;
   }

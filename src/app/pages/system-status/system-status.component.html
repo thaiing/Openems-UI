@@ -1,127 +1,94 @@
 <div class="page-container">
   <div class="page-header">
-    <div class="header-text">
-      <h1>System Status</h1>
-      <p>Real-time overview of all connected devices.</p>
-    </div>
-    <span class="last-updated">{{ statusData.lastUpdated }}</span>
+    <h1>System Status</h1>
   </div>
 
-  <div class="quick-actions">
-    <button mat-stroked-button color="primary">
-      <mat-icon>cached</mat-icon>
-      Reboot Device
-    </button>
-    <button mat-stroked-button>
-      <mat-icon>description</mat-icon>
-      View Logs
-    </button>
-    <button mat-stroked-button>
-      <mat-icon>biotech</mat-icon>
-      Run Diagnostics
-    </button>
+  <div *ngIf="isLoading" class="loading-state">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading system status...</p>
   </div>
 
-  <div class="dashboard-grid">
-    <mat-card class="detail-card system-info-card" [ngClass]="'status-' + statusData.overall?.statusClass">
+  <div *ngIf="!isLoading" class="status-grid">
+    <mat-card class="info-card">
       <mat-card-header>
-        <mat-icon mat-card-avatar>task_alt</mat-icon>
-        <mat-card-title>Overall Status</mat-card-title>
-        <mat-card-subtitle>{{ statusData.overall?.status }}</mat-card-subtitle>
-      </mat-card-header>
-    </mat-card>
-
-    <mat-card class="detail-card system-info-card">
-      <mat-card-header>
-        <mat-icon mat-card-avatar>memory</mat-icon>
+        <mat-icon mat-card-avatar>info_outline</mat-icon>
         <mat-card-title>System Information</mat-card-title>
+        <mat-card-subtitle>Thông tin chung của thiết bị</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <div class="detail-line"><span>Firmware Version:</span> <strong>{{ statusData.systemInfo?.firmware }}</strong>
+        <div class="info-row">
+          <span class="info-label">Serial Number:</span>
+          <span class="info-value">{{ serialNumber }}</span>
         </div>
-        <div class="detail-line"><span>Serial Number:</span> <strong>{{ statusData.systemInfo?.serialNumber }}</strong>
+        <div class="info-row" *ngIf="activeTier">
+          <span class="info-label">Gói Cấu Hình:</span>
+          <span class="info-value">{{ activeTier.maxInverters }} Inverters / {{ activeTier.maxTotalPowerKW }} kWp</span>
         </div>
-        <div class="detail-line"><span>System Uptime:</span> <strong>{{ statusData.systemInfo?.uptime }}</strong></div>
       </mat-card-content>
     </mat-card>
 
-    <mat-card class="detail-card" [ngClass]="'status-' + statusData.serial?.statusClass">
+    <mat-card class="info-card">
       <mat-card-header>
         <mat-icon mat-card-avatar>settings_ethernet</mat-icon>
-        <mat-card-title>Serial</mat-card-title>
+        <mat-card-title>Serial Config</mat-card-title>
+        <mat-card-subtitle>Tổng quan cấu hình cổng</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <div class="detail-line"><span>Port:</span> <strong>{{ statusData.serial?.port }}</strong></div>
-        <div class="detail-line"><span>Baud Rate:</span> <strong>{{ statusData.serial?.baudRate }}</strong></div>
+        <div class="info-row">
+          <span class="info-label">Số cổng đã cấu hình:</span>
+          <span class="info-value">{{ serialPortCount }}</span>
+        </div>
       </mat-card-content>
     </mat-card>
 
-    <mat-card class="detail-card" [ngClass]="'status-' + statusData.network?.statusClass">
+    <mat-card class="info-card">
       <mat-card-header>
-        <mat-icon mat-card-avatar>wifi</mat-icon>
-        <mat-card-title>Network</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="detail-line"><span>IP Address:</span> <strong>{{ statusData.network?.ip }}</strong></div>
-        <div class="detail-line"><span>DHCP:</span> <strong>{{ statusData.network?.dhcp }}</strong></div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="detail-card" [ngClass]="'status-' + statusData.inverter?.statusClass">
-      <mat-card-header>
-        <mat-icon mat-card-avatar>bolt</mat-icon>
+        <mat-icon mat-card-avatar>solar_power</mat-icon>
         <mat-card-title>Inverter</mat-card-title>
+        <mat-card-subtitle>Tổng quan hệ thống Inverter</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <div class="detail-line"><span>Name:</span> <strong>{{ statusData.inverter?.name }}</strong></div>
-        <div class="detail-line"><span>Brand:</span> <strong>{{ statusData.inverter?.brand }}</strong></div>
-        <div class="detail-line"><span>Pmax:</span> <strong>{{ statusData.inverter?.pmax }} kW</strong></div>
+        <div class="info-row">
+          <span class="info-label">Tổng số Inverter:</span>
+          <span class="info-value">{{ inverterCount }} / {{ activeTier?.maxInverters || 'N/A' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Tổng công suất:</span>
+          <span class="info-value">{{ totalInverterPowerKW.toFixed(2) }} / {{ activeTier?.maxTotalPowerKW || 'N/A' }}
+            kWp</span>
+        </div>
       </mat-card-content>
     </mat-card>
 
-    <mat-card class="detail-card" [ngClass]="'status-' + statusData.meter?.statusClass">
+    <mat-card class="info-card">
       <mat-card-header>
         <mat-icon mat-card-avatar>speed</mat-icon>
         <mat-card-title>Meter</mat-card-title>
+        <mat-card-subtitle>Tổng quan hệ thống đo lường</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <div class="detail-line"><span>Name:</span> <strong>{{ statusData.meter?.name }}</strong></div>
-        <div class="detail-line"><span>POI:</span> <strong>{{ statusData.meter?.poi ? 'Yes' : 'No' }}</strong></div>
-        <div class="detail-line"><span>Invert:</span> <strong>{{ statusData.meter?.invert ? 'Yes' : 'No' }}</strong>
+        <div class="info-row">
+          <span class="info-label">Tổng số Meter:</span>
+          <span class="info-value">{{ meterCount }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">POI Meter:</span>
+          <span class="info-value poi-value">{{ poiMeterAlias }}</span>
         </div>
       </mat-card-content>
     </mat-card>
 
-    <mat-card class="detail-card" [ngClass]="'status-' + statusData.storage?.statusClass">
+    <mat-card class="info-card">
       <mat-card-header>
-        <mat-icon mat-card-avatar>battery_charging_full</mat-icon>
+        <mat-icon mat-card-avatar>battery_full</mat-icon>
         <mat-card-title>Storage</mat-card-title>
+        <mat-card-subtitle>Tổng quan hệ thống lưu trữ</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <div class="detail-line"><span>Name:</span> <strong>{{ statusData.storage?.name }}</strong></div>
-        <div class="detail-line"><span>Charging:</span> <strong>{{ statusData.storage?.chargingPower }} kW</strong>
+        <div class="info-row">
+          <span class="info-label">Số thiết bị lưu trữ:</span>
+          <span class="info-value">{{ storageCount }}</span>
         </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="detail-card" [ngClass]="'status-' + statusData.ppc?.statusClass">
-      <mat-card-header>
-        <mat-icon mat-card-avatar>tune</mat-icon>
-        <mat-card-title>PPC</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="detail-line"><span>Active Mode:</span> <strong>{{ statusData.ppc?.enabledModes }}</strong></div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="detail-card" [ngClass]="'status-' + statusData.vpn?.statusClass">
-      <mat-card-header>
-        <mat-icon mat-card-avatar>vpn_lock</mat-icon>
-        <mat-card-title>VPN</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="detail-line"><span>Type:</span> <strong>{{ statusData.vpn?.type }}</strong></div>
-        <div class="detail-line"><span>Status:</span> <strong>{{ statusData.vpn?.status }}</strong></div>
       </mat-card-content>
     </mat-card>
   </div>

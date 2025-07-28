@@ -1,4 +1,7 @@
 {
+  "systemInfo": {
+    "serialNumber": "MXC-2025-07-28-001"
+  },
   "serialPortTemplates": [
     {
       "key": "modbus0",
@@ -15,17 +18,17 @@
     "currentTier": "level1",
     "tiers": {
       "level1": {
-        "label": "Gói Cơ Bản",
+        "label": "Basic",
         "maxInverters": 10,
         "maxTotalPowerKW": 400
       },
       "level2": {
-        "label": "Gói Nâng Cao",
+        "label": "Plus",
         "maxInverters": 15,
         "maxTotalPowerKW": 700
       },
       "level3": {
-        "label": "Gói Chuyên Nghiệp",
+        "label": "Premium",
         "maxInverters": 20,
         "maxTotalPowerKW": 1000
       }
@@ -216,6 +219,34 @@
       {
         "name": "SolarEdge",
         "factoryId": "SolarEdge.Grid-Meter"
+      }
+    ]
+  },
+  "storageSetup": {
+    "storageBrands": [
+      {
+        "name": "Battery BMW",
+        "factoryId": "Battery.BMW"
+      },
+      {
+        "name": "Battery FENECON Commercial",
+        "factoryId": "Battery.Fenecon.Commercial"
+      },
+      {
+        "name": "Battery FENECON Home",
+        "factoryId": "Battery.Fenecon.Home"
+      },
+      {
+        "name": "Battery Pylontech Powercube M2",
+        "factoryId": "Battery.Pylontech"
+      },
+      {
+        "name": "Battery Soltaro Cluster C",
+        "factoryId": "Battery.Soltaro.Cluster.VersionC"
+      },
+      {
+        "name": "Battery BYD Commercial C130",
+        "factoryId": "Byd.BatteryBox.Commercial.C130"
       }
     ]
   }
