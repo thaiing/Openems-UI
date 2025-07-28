@@ -12,11 +12,11 @@
       <form [formGroup]="addForm" (ngSubmit)="confirmAdd()">
         <div class="form-grid">
           <mat-form-field appearance="outline">
-            <mat-label>Tên Storage (Alias)</mat-label>
+            <mat-label>Name</mat-label>
             <input matInput formControlName="alias">
           </mat-form-field>
           <mat-form-field appearance="outline">
-            <mat-label>Hãng</mat-label>
+            <mat-label>Brand</mat-label>
             <mat-select formControlName="brand">
               <mat-option *ngFor="let brand of storageBrands" [value]="brand.factoryId">{{ brand.name }}</mat-option>
             </mat-select>
@@ -28,7 +28,7 @@
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline">
-            <mat-label>Modbus Unit-ID</mat-label>
+            <mat-label>Modbus-ID</mat-label>
             <input matInput formControlName="modbusUnitId" type="number">
           </mat-form-field>
         </div>
@@ -45,28 +45,28 @@
   </div>
 
   <div *ngIf="!isLoading && storageDevices.length === 0" class="empty-state">
-    <p>Chưa có Storage nào được cấu hình.</p>
+    <p>No ESS has been configured yet.</p>
   </div>
 
   <div class="list-container" *ngIf="!isLoading && storageDevices.length > 0">
     <div class="list-header">
-      <div class="detail-item stt-header">STT</div>
-      <div class="detail-item">Tên (Alias)</div>
-      <div class="detail-item">Hãng</div>
+      <div class="detail-item stt-header">#</div>
+      <div class="detail-item">Name</div>
+      <div class="detail-item">Brand</div>
       <div class="detail-item">Port</div>
-      <div class="detail-item">Modbus Unit-ID</div>
+      <div class="detail-item">Modbus-ID</div>
       <div class="actions-header">Actions</div>
     </div>
     <mat-card *ngFor="let device of storageDevices; let i = index" class="item-card">
       <div *ngIf="storageInEditing !== device.componentId">
         <mat-card-content class="display-content">
           <div class="item-details">
-            <div class="detail-item stt-item" data-label="STT"><strong>{{ i + 1 }}</strong></div>
-            <div class="detail-item" data-label="Tên (Alias)"><strong>{{ device.alias }}</strong></div>
-            <div class="detail-item" data-label="Hãng"><strong>{{ device.brandName }}</strong></div>
+            <div class="detail-item stt-item" data-label="#"><strong>{{ i + 1 }}</strong></div>
+            <div class="detail-item" data-label="Name"><strong>{{ device.alias }}</strong></div>
+            <div class="detail-item" data-label="Brand"><strong>{{ device.brandName }}</strong></div>
             <div class="detail-item" data-label="Port"><strong>{{ getPortDisplayName(device.serialPort) }}</strong>
             </div>
-            <div class="detail-item" data-label="Modbus Unit-ID"><strong>{{ device.modbusUnitId }}</strong></div>
+            <div class="detail-item" data-label="Modbus-ID"><strong>{{ device.modbusUnitId }}</strong></div>
           </div>
           <div class="item-actions">
             <button mat-icon-button color="primary" (click)="editStorage(device)">
@@ -84,17 +84,17 @@
           <form [formGroup]="editForm" (ngSubmit)="saveChanges(device)">
             <div class="form-grid edit-grid">
               <mat-form-field appearance="outline">
-                <mat-label>Tên (Alias)</mat-label>
+                <mat-label>Name</mat-label>
                 <input matInput formControlName="alias">
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Serial Port</mat-label>
+                <mat-label>Port</mat-label>
                 <mat-select formControlName="serialPort">
                   <mat-option *ngFor="let port of serialPorts" [value]="port.key">{{ port.displayName }}</mat-option>
                 </mat-select>
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Modbus Unit-ID</mat-label>
+                <mat-label>Modbus-ID</mat-label>
                 <input matInput formControlName="modbusUnitId" type="number">
               </mat-form-field>
             </div>

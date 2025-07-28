@@ -1,11 +1,12 @@
 import {Component, OnInit, OnDestroy} from '@angular/core';
-import {HttpClient} from '@angular/common/http'; // Chỉ cần import HttpClient
+import {HttpClient} from '@angular/common/http';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Subscription, of, forkJoin, filter, take} from 'rxjs';
 import {catchError, switchMap, tap, map} from 'rxjs/operators';
 import {StateService} from '../../services/state.service';
 import {ApiService} from '../../services/api.service';
+import {NotificationService} from '../../services/notification.service'; // Thêm vào
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
@@ -37,7 +38,7 @@ interface StorageBrand {
   selector: 'app-storage',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, MatProgressSpinnerModule, // Đã bỏ HttpClientModule
+    CommonModule, ReactiveFormsModule, MatProgressSpinnerModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule,
     MatIconModule, MatCardModule, MatTooltipModule
   ],
@@ -61,7 +62,8 @@ export class StorageComponent implements OnInit, OnDestroy {
     private stateService: StateService,
     private apiService: ApiService,
     private http: HttpClient,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private notificationService: NotificationService // Thêm vào
   ) {
   }
 
@@ -94,7 +96,7 @@ export class StorageComponent implements OnInit, OnDestroy {
 
     const config$ = this.http.get<AppConfig>('assets/config/app-config.json').pipe(
       catchError((err) => {
-        console.error("Không thể tải app-config.json", err);
+        this.notificationService.showError("Could not load app-config.json");
         return of({} as AppConfig);
       })
     );
@@ -202,13 +204,13 @@ export class StorageComponent implements OnInit, OnDestroy {
     this.apiService.createInverter(brand.factoryId, createConfig).subscribe({
       next: (result) => {
         if (result) {
-          alert('Tạo Storage thành công!');
+          this.notificationService.showSuccess('Storage created successfully!');
           this.cancelAdd();
           this.stateService.refreshState();
           setTimeout(() => this.loadData(), 1500);
         }
       },
-      error: (err) => alert('Tạo Storage không thành công: ' + err.message)
+      error: (err) => this.notificationService.showError('Failed to create storage: ' + err.message)
     });
   }
 
@@ -224,7 +226,7 @@ export class StorageComponent implements OnInit, OnDestroy {
   saveChanges(device: any): void {
     if (this.editForm.invalid) return;
     if (!device.pid) {
-      alert('Lỗi: Không tìm thấy PID của storage.');
+      this.notificationService.showError('Error: Could not find PID for this device.');
       return;
     }
 
@@ -243,30 +245,30 @@ export class StorageComponent implements OnInit, OnDestroy {
     this.apiService.updateSerialPortConfigFelix(fullPidPath, updateConfig).subscribe({
       next: (result) => {
         if (result) {
-          alert('Cập nhật thành công!');
+          this.notificationService.showSuccess('Storage updated successfully!');
           this.cancelEdit();
           this.stateService.refreshState();
           setTimeout(() => this.loadData(), 1000);
         }
       },
-      error: (err) => alert('Lưu cấu hình không thành công:\n' + (err.error || err.message))
+      error: (err) => this.notificationService.showError('Failed to save changes: ' + (err.error || err.message))
     });
   }
 
   deleteStorage(device: any): void {
     if (!device.pid) {
-      alert('Lỗi: Không tìm thấy PID của storage để xóa.');
+      this.notificationService.showError('Error: Could not find PID for this device.');
       return;
     }
-    if (confirm(`Bạn có chắc chắn muốn xóa "${device.alias}" không?`)) {
+    if (confirm(`Are you sure you want to delete "${device.alias}"?`)) {
       const fullPidPath = `/system/console/configMgr/${device.pid}`;
       this.apiService.deleteSerialPort(fullPidPath).subscribe({
         next: () => {
-          alert('Xóa thành công!');
+          this.notificationService.showSuccess('Storage deleted successfully!');
           this.stateService.refreshState();
           setTimeout(() => this.loadData(), 1000);
         },
-        error: (err) => alert('Xóa không thành công: ' + err.message)
+        error: (err) => this.notificationService.showError('Failed to delete storage: ' + err.message)
       });
     }
   }

@@ -12,11 +12,11 @@
       <form [formGroup]="addForm" (ngSubmit)="confirmAdd()">
         <div class="form-grid">
           <mat-form-field appearance="outline">
-            <mat-label>Tên Meter (Alias)</mat-label>
+            <mat-label>Name</mat-label>
             <input matInput formControlName="alias">
           </mat-form-field>
           <mat-form-field appearance="outline">
-            <mat-label>Hãng Meter</mat-label>
+            <mat-label>Brand</mat-label>
             <mat-select formControlName="brand">
               <mat-option *ngFor="let brand of meterBrands" [value]="brand.factoryId">{{ brand.name }}</mat-option>
             </mat-select>
@@ -35,7 +35,7 @@
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline">
-            <mat-label>Modbus Unit-ID</mat-label>
+            <mat-label>Modbus-ID</mat-label>
             <input matInput formControlName="modbusUnitId" type="number">
           </mat-form-field>
           <div class="toggle-group">
@@ -55,17 +55,17 @@
   </div>
 
   <div *ngIf="!isLoading && meters.length === 0" class="empty-state">
-    <p>Chưa có Meter nào được cấu hình.</p>
+    <p>No meter has been configured yet.</p>
   </div>
 
   <div class="list-container" *ngIf="!isLoading && meters.length > 0">
     <div class="list-header">
-      <div class="detail-item stt-header">STT</div>
-      <div class="detail-item">Tên (Alias)</div>
-      <div class="detail-item">Hãng</div>
+      <div class="detail-item stt-header">#</div>
+      <div class="detail-item">Name</div>
+      <div class="detail-item">Brand</div>
       <div class="detail-item">Meter Type</div>
       <div class="detail-item">Port</div>
-      <div class="detail-item">Modbus Unit-ID</div>
+      <div class="detail-item">Modbus-ID</div>
       <div class="detail-item">Invert</div>
       <div class="actions-header">Actions</div>
     </div>
@@ -73,13 +73,13 @@
       <div *ngIf="meterInEditing !== meter.componentId">
         <mat-card-content class="display-content">
           <div class="item-details">
-            <div class="detail-item stt-item" data-label="STT"><strong>{{ i + 1 }}</strong></div>
-            <div class="detail-item" data-label="Tên (Alias)"><strong>{{ meter.alias }}</strong></div>
-            <div class="detail-item" data-label="Hãng"><strong>{{ meter.brandName }}</strong></div>
+            <div class="detail-item stt-item" data-label="#"><strong>{{ i + 1 }}</strong></div>
+            <div class="detail-item" data-label="Name"><strong>{{ meter.alias }}</strong></div>
+            <div class="detail-item" data-label="Brand"><strong>{{ meter.brandName }}</strong></div>
             <div class="detail-item" data-label="Meter Type"><strong>{{ getMeterTypeDisplay(meter.type) }}</strong>
             </div>
             <div class="detail-item" data-label="Port"><strong>{{ getPortDisplayName(meter.serialPort) }}</strong></div>
-            <div class="detail-item" data-label="Modbus Unit-ID"><strong>{{ meter.modbusUnitId }}</strong></div>
+            <div class="detail-item" data-label="Modbus-ID"><strong>{{ meter.modbusUnitId }}</strong></div>
             <div class="detail-item" data-label="Invert"><strong>{{ meter.invert ? 'True' : 'False' }}</strong></div>
           </div>
           <div class="item-actions">
@@ -97,13 +97,13 @@
         <mat-card-content>
           <form [formGroup]="editForm" (ngSubmit)="saveChanges(meter)">
             <div class="item-details edit-details">
-              <div class="detail-item stt-item" data-label="STT"><strong>{{ i + 1 }}</strong></div>
-              <div class="detail-item" data-label="Tên (Alias)">
+              <div class="detail-item stt-item" data-label="#"><strong>{{ i + 1 }}</strong></div>
+              <div class="detail-item" data-label="Name">
                 <mat-form-field appearance="outline" class="edit-field">
                   <input matInput formControlName="alias">
                 </mat-form-field>
               </div>
-              <div class="detail-item" data-label="Hãng"><strong>{{ meter.brandName }}</strong></div>
+              <div class="detail-item" data-label="Brand"><strong>{{ meter.brandName }}</strong></div>
               <div class="detail-item" data-label="Meter Type">
                 <mat-form-field appearance="outline" class="edit-field">
                   <mat-select formControlName="type">
@@ -120,7 +120,7 @@
                   </mat-select>
                 </mat-form-field>
               </div>
-              <div class="detail-item" data-label="Modbus Unit-ID">
+              <div class="detail-item" data-label="Modbus-ID">
                 <mat-form-field appearance="outline" class="edit-field">
                   <input matInput formControlName="modbusUnitId" type="number">
                 </mat-form-field>

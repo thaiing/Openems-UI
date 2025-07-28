@@ -14,6 +14,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatCardModule} from '@angular/material/card';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import {NotificationService} from '../../services/notification.service';
 
 interface PortTemplate {
   key: string;
@@ -51,6 +52,7 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
   parityOptions = ['NONE', 'EVEN', 'ODD', 'MARK', 'SPACE'];
 
   constructor(
+    private notificationService: NotificationService,
     private stateService: StateService,
     private apiService: ApiService,
     private fb: FormBuilder,
@@ -159,7 +161,7 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
     const formValue = this.addForm.value;
     const template = this.portTemplates.find(t => t.key === formValue.template);
     if (!template) {
-      alert('Vui lòng chọn template');
+      this.notificationService.showError('Please select a port template to create.');
       return;
     }
 
@@ -175,15 +177,14 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
 
     this.apiService.createSerialPort(this.FACTORY_PID, createConfig)
       .pipe(catchError(err => {
-        alert('Tạo port không thành công: ' + err.message);
+        this.notificationService.showError('Failed to create port: ' + err.message);
         return of(null);
       }))
       .subscribe(result => {
         if (result) {
-          alert('Tạo port thành công!');
+          this.notificationService.showSuccess('Port created successfully!');
           this.cancelAdd();
           this.stateService.refreshState();
-          setTimeout(() => this.loadData(), 1000); // Tải lại toàn bộ dữ liệu để có PID mới
         }
       });
   }
@@ -229,15 +230,14 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
 
     this.apiService.updateSerialPortConfigFelix(fullPidPath, updateConfig)
       .pipe(catchError(err => {
-        alert('Lưu cấu hình không thành công!\n' + (err.error || err.message));
+        this.notificationService.showError('Failed to save configuration: ' + (err.error || err.message));
         return of(null);
       }))
       .subscribe(result => {
         if (result) {
-          alert('Cập nhật thành công!');
+          this.notificationService.showSuccess('Configuration saved successfully!');
           this.cancelEdit();
           this.stateService.refreshState();
-          setTimeout(() => this.loadData(), 1000); // Tải lại để cập nhật giá trị mới
         }
       });
   }
@@ -251,9 +251,8 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
       const fullPidPath = `/system/console/configMgr/${port.pid}`;
       this.apiService.deleteSerialPort(fullPidPath)
         .subscribe(() => {
-          alert('Xóa port thành công!');
+          this.notificationService.showSuccess('Port deleted successfully!');
           this.stateService.refreshState();
-          setTimeout(() => this.loadData(), 1000);
         });
     }
   }

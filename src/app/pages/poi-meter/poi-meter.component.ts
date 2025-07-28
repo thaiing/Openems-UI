@@ -15,6 +15,7 @@ import {MatCardModule} from '@angular/material/card';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {NotificationService} from '../../services/notification.service';
 
 // --- Interfaces ---
 interface AppConfig {
@@ -66,6 +67,7 @@ export class PoiMeterComponent implements OnInit, OnDestroy {
   private dataSubscription!: Subscription;
 
   constructor(
+    private notificationService: NotificationService,
     private stateService: StateService,
     private apiService: ApiService,
     private http: HttpClient,
@@ -223,13 +225,13 @@ export class PoiMeterComponent implements OnInit, OnDestroy {
     this.apiService.createInverter(brand.factoryId, createConfig).subscribe({
       next: (result) => {
         if (result) {
-          alert('Tạo Meter thành công!');
+          this.notificationService.showSuccess('Meter created successfully!');
           this.cancelAdd();
           this.stateService.refreshState();
           setTimeout(() => this.loadData(), 1500);
         }
       },
-      error: (err) => alert('Tạo Meter không thành công: ' + err.message)
+      error: (err) => this.notificationService.showError('Failed to create meter: ' + err.message)
     });
   }
 
@@ -247,7 +249,7 @@ export class PoiMeterComponent implements OnInit, OnDestroy {
   saveChanges(meter: any): void {
     if (this.editForm.invalid) return;
     if (!meter.pid) {
-      alert('Lỗi: Không tìm thấy PID của meter.');
+      alert('Error: Can not find correct PID to save.');
       return;
     }
 
@@ -264,30 +266,30 @@ export class PoiMeterComponent implements OnInit, OnDestroy {
     this.apiService.updateSerialPortConfigFelix(fullPidPath, updateConfig).subscribe({
       next: (result) => {
         if (result) {
-          alert('Cập nhật thành công!');
+          this.notificationService.showSuccess('Meter updated successfully!');
           this.cancelEdit();
           this.stateService.refreshState();
           setTimeout(() => this.loadData(), 1000);
         }
       },
-      error: (err) => alert('Lưu cấu hình không thành công:\n' + (err.error || err.message))
+      error: (err) => this.notificationService.showError('Failed to save changes: ' + (err.error || err.message))
     });
   }
 
   deleteMeter(meter: any): void {
     if (!meter.pid) {
-      alert('Lỗi: Không tìm thấy PID của meter để xóa.');
+      alert('Error: Can not find correct PID to save.');
       return;
     }
     if (confirm(`Bạn có chắc chắn muốn xóa meter "${meter.alias}" không?`)) {
       const fullPidPath = `/system/console/configMgr/${meter.pid}`;
       this.apiService.deleteSerialPort(fullPidPath).subscribe({
         next: () => {
-          alert('Xóa meter thành công!');
+          this.notificationService.showSuccess('Meter deleted successfully!');
           this.stateService.refreshState();
           setTimeout(() => this.loadData(), 1000);
         },
-        error: (err) => alert('Xóa không thành công: ' + err.message)
+        error: (err) => this.notificationService.showError('Failed to delete meter: ' + err.message)
       });
     }
   }

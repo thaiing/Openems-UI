@@ -12,17 +12,17 @@
       <form [formGroup]="addForm" (ngSubmit)="confirmAdd()">
         <div class="form-grid">
           <mat-form-field appearance="outline">
-            <mat-label>Tên Inverter (Alias)</mat-label>
+            <mat-label>Name</mat-label>
             <input matInput formControlName="alias">
           </mat-form-field>
           <mat-form-field appearance="outline">
-            <mat-label>Hãng Inverter</mat-label>
+            <mat-label>Brand</mat-label>
             <mat-select formControlName="brand">
               <mat-option *ngFor="let brand of brands" [value]="brand.factoryId">{{ brand.name }}</mat-option>
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline">
-            <mat-label>Công suất tối đa (W)</mat-label>
+            <mat-label>Pmax (W)</mat-label>
             <input matInput formControlName="maxActivePower" type="number">
           </mat-form-field>
           <mat-form-field appearance="outline">
@@ -32,7 +32,7 @@
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline">
-            <mat-label>Modbus Unit-ID</mat-label>
+            <mat-label>Modbus-ID</mat-label>
             <input matInput formControlName="modbusUnitId" type="number">
           </mat-form-field>
         </div>
@@ -49,30 +49,30 @@
   </div>
 
   <div *ngIf="!isLoading && inverters.length === 0" class="empty-state">
-    <p>Chưa có Inverter nào được cấu hình.</p>
+    <p>No inverter has been configured yet.</p>
   </div>
 
   <div class="list-container" *ngIf="!isLoading && inverters.length > 0">
     <div class="list-header">
-      <div class="detail-item stt-header">STT</div>
-      <div class="detail-item">Tên (Alias)</div>
-      <div class="detail-item">Hãng</div>
-      <div class="detail-item">Công suất (W)</div>
+      <div class="detail-item stt-header">#</div>
+      <div class="detail-item">Name</div>
+      <div class="detail-item">Brand</div>
+      <div class="detail-item">Pmax (W)</div>
       <div class="detail-item">Port</div>
-      <div class="detail-item">Modbus Unit-ID</div>
+      <div class="detail-item">Modbus-ID</div>
       <div class="actions-header">Actions</div>
     </div>
     <mat-card *ngFor="let inverter of inverters; let i = index" class="item-card">
       <div *ngIf="inverterInEditing !== inverter.componentId">
         <mat-card-content class="display-content">
           <div class="item-details">
-            <div class="detail-item stt-item" data-label="STT"><strong>{{ i + 1 }}</strong></div>
-            <div class="detail-item" data-label="Tên (Alias)"><strong>{{ inverter.alias }}</strong></div>
-            <div class="detail-item" data-label="Hãng"><strong>{{ inverter.brandName }}</strong></div>
-            <div class="detail-item" data-label="Công suất (W)"><strong>{{ inverter.maxActivePower }}</strong></div>
+            <div class="detail-item stt-item" data-label="#"><strong>{{ i + 1 }}</strong></div>
+            <div class="detail-item" data-label="Name"><strong>{{ inverter.alias }}</strong></div>
+            <div class="detail-item" data-label="Brand"><strong>{{ inverter.brandName }}</strong></div>
+            <div class="detail-item" data-label="Pmax (W)"><strong>{{ inverter.maxActivePower }}</strong></div>
             <div class="detail-item" data-label="Port"><strong>{{ getPortDisplayName(inverter.modbusPort) }}</strong>
             </div>
-            <div class="detail-item" data-label="Modbus Unit-ID"><strong>{{ inverter.modbusUnitId }}</strong></div>
+            <div class="detail-item" data-label="Modbus-ID"><strong>{{ inverter.modbusUnitId }}</strong></div>
           </div>
           <div class="item-actions">
             <button mat-icon-button color="primary" (click)="editInverter(inverter)">
@@ -90,15 +90,15 @@
           <form [formGroup]="editForm" (ngSubmit)="saveChanges(inverter)">
             <div class="form-grid edit-grid">
               <mat-form-field appearance="outline">
-                <mat-label>Tên (Alias)</mat-label>
+                <mat-label>Name</mat-label>
                 <input matInput formControlName="alias">
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Công suất (W)</mat-label>
+                <mat-label>Pmax (W)</mat-label>
                 <input matInput formControlName="maxActivePower" type="number">
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Serial Port</mat-label>
+                <mat-label>Port</mat-label>
                 <mat-select formControlName="modbusPort">
                   <mat-option *ngFor="let port of serialPorts" [value]="port.key">{{ port.displayName }}</mat-option>
                 </mat-select>

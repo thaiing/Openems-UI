@@ -14,6 +14,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatCardModule} from '@angular/material/card';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import {NotificationService} from '../../services/notification.service';
 
 // --- Định nghĩa Interface để code an toàn hơn ---
 interface AppConfig {
@@ -71,6 +72,7 @@ export class InverterComponent implements OnInit, OnDestroy {
   private dataSubscription!: Subscription;
 
   constructor(
+    private notificationService: NotificationService,
     private apiService: ApiService,
     private stateService: StateService,
     private http: HttpClient,
@@ -222,11 +224,11 @@ export class InverterComponent implements OnInit, OnDestroy {
     const remainingPowerKW = this.activeTier.maxTotalPowerKW - this.currentTotalPowerKW;
 
     if (this.currentInverterCount >= this.activeTier.maxInverters) {
-      alert(`Lỗi: Đã đạt giới hạn tối đa ${this.activeTier.maxInverters} inverter.`);
+      this.notificationService.showError(`Error: Maximum inverter limit of ${this.activeTier.maxInverters} has been reached.`);
       return;
     }
     if ((newPowerW / 1000) > remainingPowerKW) {
-      alert(`Lỗi: Công suất thêm vào vượt quá giới hạn. Công suất tối đa còn lại là ${remainingPowerKW.toFixed(2)} kWp.`);
+      this.notificationService.showError(`Error: Power limit exceeded. Remaining capacity is ${remainingPowerKW.toFixed(2)} kWp.`);
       return;
     }
 
@@ -248,18 +250,17 @@ export class InverterComponent implements OnInit, OnDestroy {
       propertylist: 'id,alias,enabled,maxActivePower,modbus.id,modbusUnitId'
     };
 
-    this.apiService.createInverter(brand.factoryId, createConfig)
-      .subscribe({
-        next: (result) => {
-          if (result) {
-            alert('Tạo Inverter thành công!');
-            this.cancelAdd();
-            this.stateService.refreshState();
-            setTimeout(() => this.loadData(), 1500);
-          }
-        },
-        error: (err) => alert('Tạo Inverter không thành công: ' + err.message)
-      });
+    this.apiService.createInverter(brand.factoryId, createConfig).subscribe({
+      next: (result) => {
+        if (result) {
+          this.notificationService.showSuccess('Inverter created successfully!');
+          this.cancelAdd();
+          this.stateService.refreshState();
+          setTimeout(() => this.loadData(), 1500);
+        }
+      },
+      error: (err) => this.notificationService.showError('Failed to create inverter: ' + err.message)
+    });
   }
 
   editInverter(inverter: any): void {
@@ -279,7 +280,7 @@ export class InverterComponent implements OnInit, OnDestroy {
   saveChanges(inverter: any): void {
     if (this.editForm.invalid) return;
     if (!inverter.pid) {
-      alert('Lỗi: Không tìm thấy PID của inverter để lưu.');
+      alert('Error: Can not find the inverter to save.');
       return;
     }
 
@@ -290,7 +291,7 @@ export class InverterComponent implements OnInit, OnDestroy {
     const remainingPowerKW = this.activeTier.maxTotalPowerKW - this.currentTotalPowerKW;
 
     if ((powerDifferenceW / 1000) > remainingPowerKW) {
-      alert(`Lỗi: Công suất chỉnh sửa vượt quá giới hạn. Công suất tối đa có thể thêm là ${remainingPowerKW.toFixed(2)} kWp.`);
+      this.notificationService.showError(`Error: Power limit exceeded. You can add up to ${remainingPowerKW.toFixed(2)} kWp.`);
       return;
     }
 
@@ -307,38 +308,34 @@ export class InverterComponent implements OnInit, OnDestroy {
 
     const fullPidPath = `/system/console/configMgr/${inverter.pid}`;
 
-    this.apiService.updateSerialPortConfigFelix(fullPidPath, updateConfig)
-      .subscribe({
-        next: (result) => {
-          if (result) {
-            alert('Cập nhật thành công!');
-            this.cancelEdit();
-            this.stateService.refreshState();
-            setTimeout(() => this.loadData(), 1000);
-          }
-        },
-        error: (err) => alert('Lưu cấu hình không thành công:\n' + (err.error || err.message))
-      });
+    this.apiService.updateSerialPortConfigFelix(fullPidPath, updateConfig).subscribe({
+      next: (result) => {
+        if (result) {
+          this.notificationService.showSuccess('Inverter updated successfully!');
+          this.cancelEdit();
+          this.stateService.refreshState();
+          setTimeout(() => this.loadData(), 1000);
+        }
+      },
+      error: (err) => this.notificationService.showError('Failed to save changes: ' + (err.error || err.message))
+    });
   }
 
   deleteInverter(inverter: any): void {
     if (!inverter.pid) {
-      alert('Lỗi: Không tìm thấy PID của inverter để xóa.');
+      alert('Error: Can not find PID to delete.');
       return;
     }
-    if (confirm(`Bạn có chắc chắn muốn xóa inverter "${inverter.alias}" không?`)) {
+    if (confirm(`Are you sure you want to delete inverter "${inverter.alias}"?`)) {
       const fullPidPath = `/system/console/configMgr/${inverter.pid}`;
-      this.apiService.deleteSerialPort(fullPidPath)
-        .subscribe({
-          next: () => {
-            alert('Xóa inverter thành công!');
-            this.stateService.refreshState();
-            setTimeout(() => this.loadData(), 1000);
-          },
-          error: (err) => {
-            alert('Xóa không thành công: ' + err.message);
-          }
-        });
+      this.apiService.deleteSerialPort(fullPidPath).subscribe({
+        next: () => {
+          this.notificationService.showSuccess('Inverter deleted successfully!');
+          this.stateService.refreshState();
+          setTimeout(() => this.loadData(), 1000);
+        },
+        error: (err) => this.notificationService.showError('Failed to delete inverter: ' + err.message)
+      });
     }
   }
 }

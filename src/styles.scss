@@ -1,4 +1,68 @@
 /* You can add global styles to this file, and also import other style files */
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+
+/* --- Custom Snackbar Styles --- */
+
+// SỬA LỖI: Buộc container của snackbar căn giữa màn hình
+// Class này được Angular Material tự động thêm vào
+.mat-mdc-snack-bar-container-center {
+  // Đặt lại các thuộc tính vị trí
+  top: 50% !important;
+  bottom: 50% !important;
+  left: 50% !important;
+  right: 50% !important;
+  // Dịch chuyển nó vào đúng vị trí trung tâm
+  transform: translate(-50%, -50%) !important;
+}
+
+// Class chung cho tất cả thông báo
+.custom-snackbar {
+  max-width: 90vw !important;
+
+  @media (min-width: 600px) {
+    max-width: 450px !important;
+  }
+
+  .mat-mdc-snack-bar-label {
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  // SỬA LỖI: Làm cho nút "Close" đậm hơn
+  .mat-mdc-button-base {
+    font-weight: 600 !important;
+  }
+}
+
+// Style cho thông báo thành công (Success)
+.success-snackbar {
+  --mdc-snackbar-container-color: #edf7ed;
+  --mdc-snackbar-supporting-text-color: #1e4620;
+  --mat-mdc-snack-bar-button-color: #2e7d32;
+  border-left: 5px solid #4caf50;
+}
+
+// Style cho thông báo lỗi (Error)
+.error-snackbar {
+  --mdc-snackbar-container-color: #fdeded;
+  --mdc-snackbar-supporting-text-color: #5f2120;
+  --mat-mdc-snack-bar-button-color: #d32f2f;
+  border-left: 5px solid #f44336;
+}
+
+// Style cho thông báo cảnh báo (Warning)
+.warning-snackbar {
+  --mdc-snackbar-container-color: #fff4e5;
+  --mdc-snackbar-supporting-text-color: #663c00;
+  --mat-mdc-snack-bar-button-color: #ed6c02;
+  border-left: 5px solid #ff9800;
+}
