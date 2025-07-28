@@ -1,139 +1,133 @@
 <div class="page-container">
   <div class="page-header">
     <h1>Serial Port Configuration</h1>
-    <button mat-fab extended color="primary"
-            *ngIf="!isAdding && ports.length < portTemplates.length"
-            (click)="showAddForm()">
+    <button mat-flat-button color="primary" *ngIf="!isAdding" (click)="showAddForm()">
       <mat-icon>add</mat-icon>
-      Add Port
+      Add New Port
     </button>
   </div>
 
-  <mat-card *ngIf="isAdding" class="form-container">
-    <mat-card-title>Create New Port</mat-card-title>
+  <mat-card *ngIf="isAdding" class="form-card">
     <mat-card-content>
-      <form [formGroup]="addForm" class="add-form">
-        <mat-form-field appearance="outline">
-          <mat-label>Port Template</mat-label>
-          <mat-select formControlName="template">
-            <mat-option *ngFor="let template of getAvailableTemplates()" [value]="template.key">
-              {{ template.displayName }} ({{ template.portName }})
-            </mat-option>
-          </mat-select>
-          <mat-error>Vui lòng chọn template</mat-error>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Baud Rate</mat-label>
-          <mat-select formControlName="baudRate">
-            <mat-option *ngFor="let rate of baudRates" [value]="rate">{{ rate }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Data Bits</mat-label>
-          <mat-select formControlName="databits">
-            <mat-option *ngFor="let bits of dataBitsOptions" [value]="bits">{{ bits }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Stop Bits</mat-label>
-          <mat-select formControlName="stopbits">
-            <mat-option *ngFor="let bits of stopBitsOptions" [value]="bits">{{ bits }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Parity</mat-label>
-          <mat-select formControlName="parity">
-            <mat-option *ngFor="let option of parityOptions" [value]="option">{{ option }}</mat-option>
-          </mat-select>
-        </mat-form-field>
+      <form [formGroup]="addForm" (ngSubmit)="confirmAddPort()">
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Port Template</mat-label>
+            <mat-select formControlName="template">
+              <mat-option *ngFor="let template of getAvailableTemplates()" [value]="template.key">
+                {{ template.displayName }} ({{ template.portName }})
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Baud Rate</mat-label>
+            <mat-select formControlName="baudRate">
+              <mat-option *ngFor="let rate of baudRates" [value]="rate">{{ rate }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Data Bits</mat-label>
+            <mat-select formControlName="databits">
+              <mat-option *ngFor="let bits of dataBitsOptions" [value]="bits">{{ bits }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Stop Bits</mat-label>
+            <mat-select formControlName="stopbits">
+              <mat-option *ngFor="let bits of stopBitsOptions" [value]="bits">{{ bits }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Parity</mat-label>
+            <mat-select formControlName="parity">
+              <mat-option *ngFor="let option of parityOptions" [value]="option">{{ option }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="action-buttons">
+          <button mat-flat-button color="primary" type="submit" [disabled]="addForm.invalid">Add Port</button>
+          <button mat-stroked-button type="button" (click)="cancelAdd()">Cancel</button>
+        </div>
       </form>
     </mat-card-content>
-    <mat-card-actions align="end">
-      <button mat-button (click)="cancelAdd()">Cancel</button>
-      <button mat-flat-button color="primary" (click)="confirmAddPort()" [disabled]="addForm.invalid">Create Port
-      </button>
-    </mat-card-actions>
   </mat-card>
 
-  <mat-card class="port-list">
+  <div class="list-container">
     <div class="list-header">
-      <div class="col col-stt">STT</div>
-      <div class="col col-display-name">Display Name</div>
-      <div class="col">Baud Rate</div>
-      <div class="col">Data Bits</div>
-      <div class="col">Stop Bits</div>
-      <div class="col">Parity</div>
-      <div class="col col-actions">Actions</div>
+      <div class="detail-item stt-header">STT</div>
+      <div class="detail-item">Display Name</div>
+      <div class="detail-item">Baud Rate</div>
+      <div class="detail-item">Data Bits</div>
+      <div class="detail-item">Stop Bits</div>
+      <div class="detail-item">Parity</div>
+      <div class="actions-header">Actions</div>
     </div>
-
-    <div *ngIf="ports.length === 0 && !isAdding" class="empty-state">
-      <p>Chưa có Serial Port nào được cấu hình. Nhấn "Add Port" để bắt đầu.</p>
-    </div>
-
-    <div *ngFor="let port of ports; let i = index" class="port-block">
-
-      <div class="port-row" *ngIf="portInEditing !== port.key">
-        <div class="col col-stt" data-label="STT">{{ i + 1 }}</div>
-        <div class="col col-display-name" data-label="Display Name" [matTooltip]="port.key">{{ port.displayName }}</div>
-        <div class="col" data-label="Baud Rate">{{ port.baudRate }}</div>
-        <div class="col" data-label="Data Bits">{{ port.databits }}</div>
-        <div class="col" data-label="Stop Bits">{{ port.stopbits }}</div>
-        <div class="col" data-label="Parity">{{ port.parity }}</div>
-        <div class="col col-actions" data-label="Actions">
-          <button mat-icon-button (click)="editPort(port)" matTooltip="Edit Port">
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button mat-icon-button color="warn" (click)="deletePort(port)" matTooltip="Delete Port">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </div>
-      </div>
-
-      <div class="edit-container" *ngIf="portInEditing === port.key">
-        <form [formGroup]="editForm" class="edit-form-row">
-          <div class="col col-stt" data-label="STT">{{ i + 1 }}</div>
-          <div class="col col-display-name" data-label="Display Name" [matTooltip]="port.key">{{ port.displayName }}
+    <mat-card *ngFor="let port of ports; let i = index" class="item-card">
+      <div *ngIf="portInEditing !== port.key">
+        <mat-card-content class="display-content">
+          <div class="item-details">
+            <div class="detail-item stt-item" data-label="STT"><strong>{{ i + 1 }}</strong></div>
+            <div class="detail-item" data-label="Display Name"><strong>{{ port.displayName }}</strong></div>
+            <div class="detail-item" data-label="Baud Rate"><strong>{{ port.baudRate }}</strong></div>
+            <div class="detail-item" data-label="Data Bits"><strong>{{ port.databits }}</strong></div>
+            <div class="detail-item" data-label="Stop Bits"><strong>{{ port.stopbits }}</strong></div>
+            <div class="detail-item" data-label="Parity"><strong>{{ port.parity }}</strong></div>
           </div>
-          <div class="col" data-label="Baud Rate">
-            <mat-form-field appearance="outline" class="edit-field">
-              <mat-select formControlName="baudRate">
-                <mat-option *ngFor="let rate of baudRates" [value]="rate">{{ rate }}</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-          <div class="col" data-label="Data Bits">
-            <mat-form-field appearance="outline" class="edit-field">
-              <mat-select formControlName="databits">
-                <mat-option *ngFor="let bits of dataBitsOptions" [value]="bits">{{ bits }}</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-          <div class="col" data-label="Stop Bits">
-            <mat-form-field appearance="outline" class="edit-field">
-              <mat-select formControlName="stopbits">
-                <mat-option *ngFor="let bits of stopBitsOptions" [value]="bits">{{ bits }}</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-          <div class="col" data-label="Parity">
-            <mat-form-field appearance="outline" class="edit-field">
-              <mat-select formControlName="parity">
-                <mat-option *ngFor="let option of parityOptions" [value]="option">{{ option }}</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-          <div class="col col-actions" data-label="Actions">
-            <button mat-icon-button (click)="saveChanges(port)" [disabled]="editForm.invalid" matTooltip="Save Changes">
-              <mat-icon color="primary">save</mat-icon>
+          <div class="item-actions">
+            <button mat-icon-button color="primary" (click)="editPort(port)">
+              <mat-icon>edit</mat-icon>
             </button>
-            <button mat-icon-button (click)="cancelEdit()" matTooltip="Cancel Edit">
-              <mat-icon>cancel</mat-icon>
+            <button mat-icon-button color="warn" (click)="deletePort(port)">
+              <mat-icon>delete</mat-icon>
             </button>
           </div>
-        </form>
+        </mat-card-content>
       </div>
 
-    </div>
-  </mat-card>
-
+      <div *ngIf="portInEditing === port.key" class="edit-container">
+        <mat-card-content>
+          <form [formGroup]="editForm" (ngSubmit)="saveChanges(port)">
+            <div class="edit-grid">
+              <div class="static-field">
+                <span>STT</span>
+                <strong>{{ i + 1 }}</strong>
+              </div>
+              <div class="static-field">
+                <span>Display Name</span>
+                <strong>{{ port.displayName }}</strong>
+              </div>
+              <mat-form-field appearance="outline">
+                <mat-label>Baud Rate</mat-label>
+                <mat-select formControlName="baudRate">
+                  <mat-option *ngFor="let rate of baudRates" [value]="rate">{{ rate }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Data Bits</mat-label>
+                <mat-select formControlName="databits">
+                  <mat-option *ngFor="let bits of dataBitsOptions" [value]="bits">{{ bits }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Stop Bits</mat-label>
+                <mat-select formControlName="stopbits">
+                  <mat-option *ngFor="let bits of stopBitsOptions" [value]="bits">{{ bits }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Parity</mat-label>
+                <mat-select formControlName="parity">
+                  <mat-option *ngFor="let option of parityOptions" [value]="option">{{ option }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div class="action-buttons">
+              <button mat-flat-button color="primary" type="submit" [disabled]="editForm.invalid">Save</button>
+              <button mat-stroked-button type="button" (click)="cancelEdit()">Cancel</button>
+            </div>
+          </form>
+        </mat-card-content>
+      </div>
+    </mat-card>
+  </div>
 </div>

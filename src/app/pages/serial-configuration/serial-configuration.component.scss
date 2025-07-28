@@ -1,3 +1,8 @@
+:host {
+  display: block;
+}
+
+// Biến màu để dễ quản lý
 $primary-color: #012596;
 $border-color: #e9eef2;
 $label-color: #6c757d;
@@ -8,143 +13,171 @@ $text-color: #343a40;
 }
 
 .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 24px;
 
   h1 {
     font-size: 24px;
     font-weight: 600;
     color: $primary-color;
-    margin-bottom: 24px;
+    margin: 0;
   }
 }
 
-.port-list {
-  background-color: #ffffff;
-  border-radius: 8px;
-  overflow: hidden;
+// --- Card thêm mới ---
+.form-card {
+  margin-bottom: 24px;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  align-items: center;
+}
+
+// --- Danh sách ---
+.list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .list-header {
   display: flex;
-  background-color: rgba(29, 101, 202, 0.99);
-  font-weight: 500;
-  font-size: 14px;
-  padding: 12px 16px;
-  border-bottom: 1px solid #e0e0e0;
-  color: #fff;
-}
+  gap: 16px;
+  padding: 0 24px;
+  font-weight: 600;
+  color: $label-color;
+  font-size: 13px;
 
-.port-block {
-  border-bottom: 1px solid #e0e0e0;
+  .detail-item {
+    flex: 1;
+  }
 
-  &:last-child {
-    border-bottom: none;
+  .stt-header {
+    flex: 0 0 50px;
+  }
+
+  .actions-header {
+    flex: 0 0 100px;
+    text-align: right;
   }
 }
 
-.port-row,
-.edit-container form {
+.item-card {
+  padding: 0 !important;
+}
+
+.display-content, .edit-container {
+  padding: 16px 24px;
+}
+
+.display-content {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 8px 16px;
-  min-height: 72px;
+  gap: 16px;
 }
 
-.col {
-  flex: 1;
-  padding: 0 8px;
-  font-size: 14px;
-}
-
-.col-port {
-  flex: 1.5;
-}
-
-.col-actions {
-  flex: 0 1 120px;
-  text-align: right;
+.item-details {
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.edit-container {
-  background-color: #f9fafb;
-}
-
-.edit-container mat-form-field {
+  gap: 16px;
   width: 100%;
+  align-items: center;
 
-  ::ng-deep .mat-mdc-form-field-flex {
-    height: 48px;
+  .detail-item {
+    flex: 1;
+
+    strong {
+      font-size: 15px;
+      font-weight: 500;
+      color: $text-color;
+    }
   }
 
-  ::ng-deep .mat-mdc-text-field-wrapper {
-    height: 48px;
-  }
-
-  ::ng-deep .mat-mdc-form-field-infix {
-    padding-top: 12px;
-    padding-bottom: 12px;
+  .stt-item {
+    flex: 0 0 50px;
   }
 }
 
-// Responsive
+.item-actions {
+  flex: 0 0 100px;
+  text-align: right;
+}
+
+.edit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  align-items: center;
+}
+
+.static-field {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+
+  span {
+    font-size: 13px;
+    color: $label-color;
+  }
+
+  strong {
+    font-size: 15px;
+    font-weight: 500;
+    color: $text-color;
+  }
+}
+
+
+// --- RESPONSIVE ---
 @media (max-width: 992px) {
   .list-header {
     display: none;
   }
-  .port-row,
-  .edit-container form {
+  .display-content {
     flex-direction: column;
     align-items: stretch;
-    padding: 16px;
-  }
-  .col {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    padding: 10px 0;
-    min-height: 40px;
-    align-items: center;
-    border-bottom: 1px dashed #e0e0e0;
-    flex: 1 1 auto !important;
-    text-align: left;
-
-    &:last-child {
-      border-bottom: none;
-    }
-
-    &::before {
-      content: attr(data-label);
-      font-weight: 600;
-      color: #555;
-      margin-right: 16px;
-    }
   }
 
-  .edit-container .col {
-    &::before {
-      display: none;
-    }
+  .item-details {
+    display: block;
 
-    strong {
-      margin-bottom: 8px;
-      display: block;
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px dashed $border-color;
+
+      &:first-child {
+        border-top: 1px dashed $border-color;
+      }
+
+      &::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: $label-color;
+      }
     }
   }
-}
 
-.loading-spinner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 50px;
-  gap: 16px;
-  color: #6c757d;
-}
+  .item-actions {
+    align-self: flex-end;
+    margin-top: 12px;
+  }
 
-.col-port {
-  flex: 1.2; // Tăng độ rộng cho cột ID và Port Name
+  .edit-grid {
+    grid-template-columns: 1fr;
+  }
 }

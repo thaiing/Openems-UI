@@ -1,5 +1,5 @@
 import {Component, OnInit, OnDestroy} from '@angular/core';
-import {HttpClient} from '@angular/common/http'; // Chỉ cần import HttpClient
+import {HttpClient, HttpClientModule} from '@angular/common/http';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Subscription, of, forkJoin, filter, take} from 'rxjs';
@@ -45,7 +45,7 @@ interface TierConfig {
   selector: 'app-inverter',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, MatProgressSpinnerModule, // Bỏ HttpClientModule
+    CommonModule, ReactiveFormsModule, HttpClientModule, MatProgressSpinnerModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatButtonModule, MatIconModule, MatCardModule, MatTooltipModule
   ],
@@ -58,6 +58,7 @@ export class InverterComponent implements OnInit, OnDestroy {
   brands: InverterBrand[] = [];
   private activeTier!: TierConfig;
 
+  // Thuộc tính để theo dõi giới hạn
   currentInverterCount = 0;
   currentTotalPowerKW = 0;
 
@@ -163,17 +164,20 @@ export class InverterComponent implements OnInit, OnDestroy {
         })
         .filter(inv => inv !== null);
 
+      // Tính toán lại tổng công suất và số lượng
       this.currentInverterCount = this.inverters.length;
       this.currentTotalPowerKW = this.inverters.reduce((sum, inv) => sum + (inv.maxActivePower / 1000), 0);
       this.isLoading = false;
     });
   }
 
+  // Hàm trợ giúp để lấy Display Name của Port
   getPortDisplayName(key: string): string {
     const port = this.serialPorts.find(p => p.key === key);
     return port ? port.displayName : key;
   }
 
+  // Logic kiểm tra để vô hiệu hóa nút "Add"
   get isAddButtonDisabled(): boolean {
     if (!this.activeTier) return true;
     const atMaxInverters = this.currentInverterCount >= this.activeTier.maxInverters;
