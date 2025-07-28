@@ -1,121 +1,166 @@
+:host {
+  display: block;
+}
+
+// Biến màu để dễ quản lý
+$primary-color: #012596;
+$border-color: #e9eef2;
+$label-color: #6c757d;
+$text-color: #343a40;
+
 .page-container {
   padding: 24px;
 }
 
 .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 24px;
 
   h1 {
     font-size: 24px;
     font-weight: 600;
-    margin-bottom: 24px;
+    color: $primary-color;
+    margin: 0;
   }
 }
 
-.form-container {
+// --- Card thêm mới ---
+.form-card {
   margin-bottom: 24px;
 }
 
-.add-form {
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
-}
-
-.list-container {
-  overflow-x: auto; // Thêm thanh cuộn ngang khi cần
-}
-
-.list-header,
-.list-row {
-  display: flex;
   align-items: center;
-  padding: 12px 8px; // Giảm padding ngang
-  border-bottom: 1px solid #e0e0e0;
-  min-width: 700px; // Đặt chiều rộng tối thiểu
+}
+
+// --- Danh sách ---
+.list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .list-header {
+  display: flex;
+  gap: 16px;
+  padding: 0 24px;
   font-weight: 600;
-  background-color: #f8f9fa;
+  color: $label-color;
+  font-size: 13px;
+
+  .detail-item {
+    flex: 1; // Chia đều các cột
+  }
+
+  .stt-header {
+    flex: 0 0 50px; // Cột STT nhỏ
+  }
+
+  .actions-header {
+    flex: 0 0 100px;
+    text-align: right;
+  }
 }
 
-.list-row:last-child {
-  border-bottom: none;
+.item-card {
+  padding: 0 !important;
 }
 
-.col {
-  padding: 0 8px;
-  word-wrap: break-word;
-  // Phân bổ độ rộng cơ bản
-  flex: 1 1 15%;
+.display-content, .edit-container {
+  padding: 16px 24px;
 }
 
-// Tùy chỉnh độ rộng cho các cột cụ thể
-.col-alias {
-  flex: 1 1 15%;
-}
-
-.col-brand {
-  flex: 1 1 20%;
-}
-
-.col-power {
-  flex: 1 1 15%;
-}
-
-.col-port {
-  flex: 1 1 15%;
-}
-
-.col-unit-id {
-  flex: 1 1 15%;
-}
-
-.col-actions {
-  flex: 0 0 100px; // Cố định chiều rộng cột Actions
-  justify-content: flex-end;
+.display-content {
   display: flex;
-}
-
-.loading-state,
-.empty-state {
-  display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  padding: 48px;
-  color: #6c757d;
+  gap: 16px;
 }
 
-// Responsive cho màn hình nhỏ
-@media (max-width: 768px) {
+.item-details {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  align-items: center;
+
+  .detail-item {
+    flex: 1;
+
+    strong {
+      font-size: 15px;
+      font-weight: 500;
+      color: $text-color;
+    }
+  }
+
+  .stt-item {
+    flex: 0 0 50px;
+  }
+}
+
+.item-actions {
+  flex: 0 0 100px;
+  text-align: right;
+}
+
+.loading-state, .empty-state {
+  padding: 48px;
+  text-align: center;
+  color: $label-color;
+}
+
+.edit-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+
+// --- RESPONSIVE ---
+@media (max-width: 992px) {
   .list-header {
     display: none;
   }
-  .list-row {
+  .display-content {
     flex-direction: column;
     align-items: stretch;
-    padding: 8px 16px;
-    min-width: unset;
   }
-  .col {
-    flex: 1 1 auto;
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px dashed #e0e0e0;
 
-    &:last-child {
-      border-bottom: none;
-    }
+  .item-details {
+    display: block;
 
-    &::before {
-      content: attr(data-label);
-      font-weight: 600;
-      padding-right: 16px;
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px dashed $border-color;
+
+      &:first-child { // Bỏ gạch chân cho STT
+        border-bottom: none;
+        padding-bottom: 12px;
+      }
+
+      &::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: $label-color;
+      }
     }
   }
-  .col-actions {
-    justify-content: center;
+
+  .item-actions {
+    align-self: flex-end;
+    margin-top: 12px;
   }
 }

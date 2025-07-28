@@ -1,5 +1,5 @@
 import {Component, OnInit, OnDestroy} from '@angular/core';
-import {HttpClient, HttpClientModule} from '@angular/common/http';
+import {HttpClient} from '@angular/common/http'; // Chỉ cần import HttpClient
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Subscription, of, forkJoin, filter, take} from 'rxjs';
@@ -17,11 +17,18 @@ import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 
 // --- Định nghĩa Interface để code an toàn hơn ---
 interface AppConfig {
+  serialPortTemplates?: PortTemplate[];
   inverterSetup?: {
     currentTier: string;
     tiers: { [key: string]: TierConfig };
     inverterBrands: InverterBrand[];
   }
+}
+
+interface PortTemplate {
+  key: string;
+  displayName: string;
+  portName: string;
 }
 
 interface InverterBrand {
@@ -38,7 +45,7 @@ interface TierConfig {
   selector: 'app-inverter',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, HttpClientModule, MatProgressSpinnerModule,
+    CommonModule, ReactiveFormsModule, MatProgressSpinnerModule, // Bỏ HttpClientModule
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatButtonModule, MatIconModule, MatCardModule, MatTooltipModule
   ],
@@ -47,7 +54,7 @@ interface TierConfig {
 })
 export class InverterComponent implements OnInit, OnDestroy {
   inverters: any[] = [];
-  serialPorts: string[] = [];
+  serialPorts: PortTemplate[] = [];
   brands: InverterBrand[] = [];
   private activeTier!: TierConfig;
 
@@ -72,6 +79,7 @@ export class InverterComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.addForm = this.fb.group({
+      alias: ['', Validators.required],
       brand: [null, Validators.required],
       maxActivePower: [null, [Validators.required, Validators.min(1)]],
       modbusPort: [null, Validators.required],
@@ -79,6 +87,7 @@ export class InverterComponent implements OnInit, OnDestroy {
     });
 
     this.editForm = this.fb.group({
+      alias: ['', Validators.required],
       maxActivePower: [null, [Validators.required, Validators.min(1)]],
       modbusPort: [null, Validators.required],
       modbusUnitId: ['', [Validators.required, Validators.min(1), Validators.max(247)]],
@@ -100,7 +109,7 @@ export class InverterComponent implements OnInit, OnDestroy {
     }
 
     const config$ = this.http.get<AppConfig>('assets/config/app-config.json').pipe(
-      catchError((err) => { // SỬA LỖI: Thêm tham số 'err'
+      catchError((err) => {
         console.error("Không thể tải app-config.json", err);
         return of({} as AppConfig);
       })
@@ -108,6 +117,7 @@ export class InverterComponent implements OnInit, OnDestroy {
 
     this.dataSubscription = config$.pipe(
       tap(config => {
+        this.serialPorts = config.serialPortTemplates || [];
         if (config && config.inverterSetup) {
           const setup = config.inverterSetup;
           this.brands = setup.inverterBrands;
@@ -124,14 +134,6 @@ export class InverterComponent implements OnInit, OnDestroy {
         )
       }))
     ).subscribe(({felixPids, allComponents}) => {
-      this.serialPorts = felixPids
-        .filter(p => p.fpid === 'Bridge.Modbus.Serial')
-        .map(p => {
-          const aliasMatch = p.nameHint?.match(/\[(.*?)\]/);
-          return aliasMatch ? aliasMatch[1] : null;
-        })
-        .filter((alias): alias is string => alias !== null);
-
       const pidMap = new Map<string, string>();
       felixPids
         .filter(p => this.brands.some(b => b.factoryId === p.fpid))
@@ -151,7 +153,8 @@ export class InverterComponent implements OnInit, OnDestroy {
 
           return {
             pid: longPid,
-            alias: id,
+            componentId: id,
+            alias: props.alias,
             brandName: this.brands.find(b => b.factoryId === config.factoryId)?.name || config.factoryId,
             maxActivePower: props.maxActivePower,
             modbusPort: props['modbus.id'],
@@ -162,9 +165,13 @@ export class InverterComponent implements OnInit, OnDestroy {
 
       this.currentInverterCount = this.inverters.length;
       this.currentTotalPowerKW = this.inverters.reduce((sum, inv) => sum + (inv.maxActivePower / 1000), 0);
-
       this.isLoading = false;
     });
+  }
+
+  getPortDisplayName(key: string): string {
+    const port = this.serialPorts.find(p => p.key === key);
+    return port ? port.displayName : key;
   }
 
   get isAddButtonDisabled(): boolean {
@@ -172,6 +179,23 @@ export class InverterComponent implements OnInit, OnDestroy {
     const atMaxInverters = this.currentInverterCount >= this.activeTier.maxInverters;
     const atMaxPower = this.currentTotalPowerKW >= this.activeTier.maxTotalPowerKW;
     return atMaxInverters || atMaxPower;
+  }
+
+  private findNextAvailableComponentId(): string {
+    const existingIds = this.inverters
+      .map(inv => parseInt(inv.componentId.replace('pvInverter', ''), 10))
+      .filter(id => !isNaN(id))
+      .sort((a, b) => a - b);
+
+    let nextId = 0;
+    for (const id of existingIds) {
+      if (id === nextId) {
+        nextId++;
+      } else {
+        break;
+      }
+    }
+    return `pvInverter${nextId}`;
   }
 
   showAddForm(): void {
@@ -205,14 +229,14 @@ export class InverterComponent implements OnInit, OnDestroy {
     const brand = this.brands.find(b => b.factoryId === formValue.brand);
     if (!brand) return;
 
-    const nextId = this.inverters.length;
-    const newAlias = `pvInverter${nextId}`;
+    const componentId = this.findNextAvailableComponentId();
+    const userAlias = formValue.alias;
 
     const createConfig = {
       apply: 'true',
       factoryPid: brand.factoryId,
-      id: newAlias,
-      alias: newAlias,
+      id: componentId,
+      alias: userAlias,
       enabled: 'true',
       maxActivePower: newPowerW,
       'modbus.id': formValue.modbusPort,
@@ -221,23 +245,23 @@ export class InverterComponent implements OnInit, OnDestroy {
     };
 
     this.apiService.createInverter(brand.factoryId, createConfig)
-      .pipe(catchError(err => {
-        alert('Tạo Inverter không thành công: ' + err.message);
-        return of(null);
-      }))
-      .subscribe(result => {
-        if (result) {
-          alert('Tạo Inverter thành công!');
-          this.cancelAdd();
-          this.stateService.refreshState();
-          setTimeout(() => this.loadData(), 1500);
-        }
+      .subscribe({
+        next: (result) => {
+          if (result) {
+            alert('Tạo Inverter thành công!');
+            this.cancelAdd();
+            this.stateService.refreshState();
+            setTimeout(() => this.loadData(), 1500);
+          }
+        },
+        error: (err) => alert('Tạo Inverter không thành công: ' + err.message)
       });
   }
 
   editInverter(inverter: any): void {
-    this.inverterInEditing = inverter.alias;
+    this.inverterInEditing = inverter.componentId;
     this.editForm.patchValue({
+      alias: inverter.alias,
       maxActivePower: inverter.maxActivePower,
       modbusPort: inverter.modbusPort,
       modbusUnitId: inverter.modbusUnitId
@@ -256,8 +280,6 @@ export class InverterComponent implements OnInit, OnDestroy {
     }
 
     const formValue = this.editForm.value;
-
-    // SỬA LỖI: Thêm logic kiểm tra giới hạn công suất khi Sửa
     const newPowerW = formValue.maxActivePower;
     const oldPowerW = inverter.maxActivePower;
     const powerDifferenceW = newPowerW - oldPowerW;
@@ -270,28 +292,28 @@ export class InverterComponent implements OnInit, OnDestroy {
 
     const updateConfig = {
       apply: 'true',
-      alias: inverter.alias,
+      id: inverter.componentId,
+      alias: formValue.alias,
       enabled: 'true',
       maxActivePower: formValue.maxActivePower,
       'modbus.id': formValue.modbusPort,
       modbusUnitId: formValue.modbusUnitId,
-      propertylist: 'alias,enabled,maxActivePower,modbus.id,modbusUnitId'
+      propertylist: 'id,alias,enabled,maxActivePower,modbus.id,modbusUnitId'
     };
 
     const fullPidPath = `/system/console/configMgr/${inverter.pid}`;
 
     this.apiService.updateSerialPortConfigFelix(fullPidPath, updateConfig)
-      .pipe(catchError(err => {
-        alert('Lưu cấu hình không thành công:\n' + (err.error || err.message));
-        return of(null);
-      }))
-      .subscribe(result => {
-        if (result) {
-          alert('Cập nhật thành công!');
-          this.cancelEdit();
-          this.stateService.refreshState();
-          setTimeout(() => this.loadData(), 1000);
-        }
+      .subscribe({
+        next: (result) => {
+          if (result) {
+            alert('Cập nhật thành công!');
+            this.cancelEdit();
+            this.stateService.refreshState();
+            setTimeout(() => this.loadData(), 1000);
+          }
+        },
+        error: (err) => alert('Lưu cấu hình không thành công:\n' + (err.error || err.message))
       });
   }
 
@@ -303,7 +325,7 @@ export class InverterComponent implements OnInit, OnDestroy {
     if (confirm(`Bạn có chắc chắn muốn xóa inverter "${inverter.alias}" không?`)) {
       const fullPidPath = `/system/console/configMgr/${inverter.pid}`;
       this.apiService.deleteSerialPort(fullPidPath)
-        .subscribe({ // SỬA LỖI: Dùng cú pháp an toàn hơn
+        .subscribe({
           next: () => {
             alert('Xóa inverter thành công!');
             this.stateService.refreshState();
