@@ -64,5 +64,159 @@
         "factoryId": "PvInverter.Cluster"
       }
     ]
+  },
+  "meterSetup": {
+    "meterTypes": [
+      {
+        "value": "GRID",
+        "display": "POI"
+      },
+      {
+        "value": "PRODUCTION",
+        "display": "Production"
+      },
+      {
+        "value": "PRODUCTION_AND_CONSUMPTION",
+        "display": "Production & Consumption"
+      },
+      {
+        "value": "CONSUMPTION_METERED",
+        "display": "Consumption Metered"
+      }
+    ],
+    "meterBrands": [
+      {
+        "name": "ABB B23 M-Bus",
+        "factoryId": "Meter.ABB.B23"
+      },
+      {
+        "name": "Artel MDM3100",
+        "factoryId": "Meter.Artel.MDM3100"
+      },
+      {
+        "name": "Artemes AM-2",
+        "factoryId": "Meter.Artemes.AM2"
+      },
+      {
+        "name": "B-Control EM300",
+        "factoryId": "Meter.BControl.EM300"
+      },
+      {
+        "name": "B+G E-Tech DRT428M-2",
+        "factoryId": "Meter.BGE-TECH.DRT428M2"
+      },
+      {
+        "name": "Camille Bauer APLUS",
+        "factoryId": "Meter.Camillebauer.Aplus"
+      },
+      {
+        "name": "Carlo Gavazzi EM100",
+        "factoryId": "Meter.CarloGavazzi.EM100"
+      },
+      {
+        "name": "Carlo Gavazzi EM300",
+        "factoryId": "Meter.CarloGavazzi.EM300"
+      },
+      {
+        "name": "Discovergy",
+        "factoryId": "Meter.Discovergy"
+      },
+      {
+        "name": "Eastron SDM 120",
+        "factoryId": "Meter.Eastron.SDM120"
+      },
+      {
+        "name": "Elecnova PD194Z Series",
+        "factoryId": "Meter.Elecnova.PD194Z"
+      },
+      {
+        "name": "Janitza UMG 104",
+        "factoryId": "Meter.Janitza.UMG104"
+      },
+      {
+        "name": "Janitza UMG 511",
+        "factoryId": "Meter.Janitza.UMG511"
+      },
+      {
+        "name": "Janitza UMG 604",
+        "factoryId": "Meter.Janitza.UMG604"
+      },
+      {
+        "name": "Janitza UMG 96RM-E",
+        "factoryId": "Meter.Janitza.UMG96RME"
+      },
+      {
+        "name": "KDK 2PU CT",
+        "factoryId": "Meter.KDK.2PUCT"
+      },
+      {
+        "name": "Eastron SDM 630",
+        "factoryId": "Meter.Microcare.SDM630"
+      },
+      {
+        "name": "Phoenix Contact",
+        "factoryId": "Meter.PhoenixContact"
+      },
+      {
+        "name": "Plexlog Datalogger",
+        "factoryId": "Meter.Plexlog.Datalogger"
+      },
+      {
+        "name": "PQ-Plus UMD 96",
+        "factoryId": "Meter.PqPlus.UMD96"
+      },
+      {
+        "name": "PQ-Plus UMD 97",
+        "factoryId": "Meter.PqPlus.UMD97"
+      },
+      {
+        "name": "Schneider Acti9 Smartlink",
+        "factoryId": "Meter.Schneider.Acti9.Smartlink"
+      },
+      {
+        "name": "Siemens PAC Series",
+        "factoryId": "Meter.Siemens"
+      },
+      {
+        "name": "Siemens PAC1600",
+        "factoryId": "Meter.Siemens.PAC1600"
+      },
+      {
+        "name": "Siemens SICAMT7KG966",
+        "factoryId": "Meter.Siemens.SICAMT7KG966"
+      },
+      {
+        "name": "SMA Sunny Home Manager 2.0",
+        "factoryId": "Meter.SMA.SHM20"
+      },
+      {
+        "name": "Socomec Singlephase",
+        "factoryId": "Meter.Socomec.Singlephase"
+      },
+      {
+        "name": "Socomec Threephase",
+        "factoryId": "Meter.Socomec.Threephase"
+      },
+      {
+        "name": "Virtual Add",
+        "factoryId": "Meter.Virtual.Add"
+      },
+      {
+        "name": "Virtual Subtract",
+        "factoryId": "Meter.Virtual.Subtract"
+      },
+      {
+        "name": "Weidmueller 525",
+        "factoryId": "Meter.Weidmueller.525"
+      },
+      {
+        "name": "Ziehl EFR4001IP",
+        "factoryId": "Meter.Ziehl.EFR4001IP"
+      },
+      {
+        "name": "SolarEdge",
+        "factoryId": "SolarEdge.Grid-Meter"
+      }
+    ]
   }
 }

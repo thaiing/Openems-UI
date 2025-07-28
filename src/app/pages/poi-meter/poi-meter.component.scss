@@ -22,12 +22,15 @@ $text-color: #343a40;
     font-size: 24px;
     font-weight: 600;
     color: $primary-color;
-    margin-bottom: 24px;
+    margin: 0;
   }
 }
 
+// --- Card thêm mới ---
+.form-card {
+  margin-bottom: 24px;
+}
 
-// --- Style chung ---
 .action-buttons {
   display: flex;
   justify-content: flex-end;
@@ -37,36 +40,53 @@ $text-color: #343a40;
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  // SỬA LỖI: Tăng số cột tối thiểu để có thêm không gian
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
   align-items: center;
 }
 
-.checkbox-group {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  justify-content: center;
-  padding-top: 8px; // Căn chỉnh với các ô input khác
+.toggle-group {
+  padding-top: 8px;
 }
 
-// --- Card thêm mới ---
-.form-card {
-  margin-bottom: 24px;
-}
-
-// --- Danh sách Meter ---
-.meter-list {
+// --- Danh sách ---
+.list-container {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.meter-card {
+.list-header {
+  display: flex;
+  gap: 16px;
+  padding: 0 24px;
+  font-weight: 600;
+  color: $label-color;
+  font-size: 13px;
+
+  .detail-item {
+    flex: 1;
+  }
+
+  .stt-header {
+    flex: 0 0 50px;
+  }
+
+  .actions-header {
+    flex: 0 0 100px;
+    text-align: right;
+  }
+}
+
+.item-card {
   padding: 0 !important;
 }
 
-// Chế độ hiển thị
+.display-content, .edit-container {
+  padding: 16px 24px;
+}
+
 .display-content {
   display: flex;
   justify-content: space-between;
@@ -74,62 +94,98 @@ $text-color: #343a40;
   gap: 16px;
 }
 
-.meter-details {
-  display: grid;
-  // Cập nhật lại grid để có 7 cột, cân đối hơn
-  grid-template-columns: 0.5fr 2fr 1fr 1fr 0.5fr 1fr 1fr;
+.item-details {
+  display: flex;
   gap: 16px;
   width: 100%;
   align-items: center;
 
   .detail-item {
-    span {
-      font-size: 13px;
-      color: $label-color;
-      display: block;
-      margin-bottom: 2px;
-    }
+    flex: 1;
 
-    strong, mat-icon {
+    strong {
       font-size: 15px;
       font-weight: 500;
       color: $text-color;
     }
+  }
 
-    // Căn giữa icon POI
-    mat-icon {
-      display: block;
-    }
+  .stt-item {
+    flex: 0 0 50px;
+  }
+}
+
+.item-actions {
+  flex: 0 0 100px;
+  text-align: right;
+}
+
+.loading-state, .empty-state {
+  padding: 48px;
+  text-align: center;
+  color: $label-color;
+}
+
+.edit-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.static-field {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+
+  span {
+    font-size: 13px;
+    color: $label-color;
+  }
+
+  strong {
+    font-size: 15px;
+    font-weight: 500;
+    color: $text-color;
   }
 }
 
 // --- RESPONSIVE ---
-@media (max-width: 1200px) {
-  .meter-details {
-    // 4 cột trên tablet
-    grid-template-columns: repeat(4, 1fr);
+@media (max-width: 992px) {
+  .list-header {
+    display: none;
   }
-}
-
-@media (max-width: 768px) {
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
   .display-content {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .meter-details {
-    // 2 cột trên mobile
-    grid-template-columns: repeat(2, 1fr);
+  .item-details {
+    display: block;
+
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px dashed $border-color;
+
+      &:first-child {
+        border-top: 1px dashed $border-color;
+      }
+
+      &::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: $label-color;
+      }
+    }
   }
 
-  .meter-actions {
+  .item-actions {
     align-self: flex-end;
     margin-top: 12px;
+  }
+
+  .edit-grid {
+    grid-template-columns: 1fr;
   }
 }
