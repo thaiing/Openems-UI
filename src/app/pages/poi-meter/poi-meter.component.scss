@@ -40,8 +40,7 @@ $text-color: #343a40;
 
 .form-grid {
   display: grid;
-  // SỬA LỖI: Tăng số cột tối thiểu để có thêm không gian
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
   align-items: center;
 }
@@ -130,23 +129,6 @@ $text-color: #343a40;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
-.static-field {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  height: 100%;
-
-  span {
-    font-size: 13px;
-    color: $label-color;
-  }
-
-  strong {
-    font-size: 15px;
-    font-weight: 500;
-    color: $text-color;
-  }
-}
 
 // --- RESPONSIVE ---
 @media (max-width: 992px) {
@@ -169,7 +151,8 @@ $text-color: #343a40;
       border-bottom: 1px dashed $border-color;
 
       &:first-child {
-        border-top: 1px dashed $border-color;
+        border-bottom: none;
+        padding-bottom: 12px;
       }
 
       &::before {
@@ -183,9 +166,5 @@ $text-color: #343a40;
   .item-actions {
     align-self: flex-end;
     margin-top: 12px;
-  }
-
-  .edit-grid {
-    grid-template-columns: 1fr;
   }
 }
