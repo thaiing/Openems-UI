@@ -1,11 +1,12 @@
 import {Component, OnInit, OnDestroy} from '@angular/core';
-import {HttpClient, HttpClientModule} from '@angular/common/http';
+import {HttpClient} from '@angular/common/http'; // Chỉ cần import HttpClient
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Subscription, of, forkJoin, filter, take} from 'rxjs';
 import {catchError, switchMap, tap, map} from 'rxjs/operators';
 import {StateService} from '../../services/state.service';
 import {ApiService} from '../../services/api.service';
+import {NotificationService} from '../../services/notification.service';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
@@ -14,9 +15,8 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatCardModule} from '@angular/material/card';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
-import {NotificationService} from '../../services/notification.service';
 
-// --- Định nghĩa Interface để code an toàn hơn ---
+// --- Interfaces ---
 interface AppConfig {
   serialPortTemplates?: PortTemplate[];
   inverterSetup?: {
@@ -46,7 +46,7 @@ interface TierConfig {
   selector: 'app-inverter',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, HttpClientModule, MatProgressSpinnerModule,
+    CommonModule, ReactiveFormsModule, MatProgressSpinnerModule, // Đã bỏ HttpClientModule
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatButtonModule, MatIconModule, MatCardModule, MatTooltipModule
   ],
@@ -59,7 +59,6 @@ export class InverterComponent implements OnInit, OnDestroy {
   brands: InverterBrand[] = [];
   private activeTier!: TierConfig;
 
-  // Thuộc tính để theo dõi giới hạn
   currentInverterCount = 0;
   currentTotalPowerKW = 0;
 
@@ -72,11 +71,11 @@ export class InverterComponent implements OnInit, OnDestroy {
   private dataSubscription!: Subscription;
 
   constructor(
-    private notificationService: NotificationService,
     private apiService: ApiService,
     private stateService: StateService,
     private http: HttpClient,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private notificationService: NotificationService
   ) {
   }
 
@@ -113,7 +112,7 @@ export class InverterComponent implements OnInit, OnDestroy {
 
     const config$ = this.http.get<AppConfig>('assets/config/app-config.json').pipe(
       catchError((err) => {
-        console.error("Không thể tải app-config.json", err);
+        this.notificationService.showError("Could not load app-config.json");
         return of({} as AppConfig);
       })
     );
@@ -166,20 +165,17 @@ export class InverterComponent implements OnInit, OnDestroy {
         })
         .filter(inv => inv !== null);
 
-      // Tính toán lại tổng công suất và số lượng
       this.currentInverterCount = this.inverters.length;
       this.currentTotalPowerKW = this.inverters.reduce((sum, inv) => sum + (inv.maxActivePower / 1000), 0);
       this.isLoading = false;
     });
   }
 
-  // Hàm trợ giúp để lấy Display Name của Port
   getPortDisplayName(key: string): string {
     const port = this.serialPorts.find(p => p.key === key);
     return port ? port.displayName : key;
   }
 
-  // Logic kiểm tra để vô hiệu hóa nút "Add"
   get isAddButtonDisabled(): boolean {
     if (!this.activeTier) return true;
     const atMaxInverters = this.currentInverterCount >= this.activeTier.maxInverters;
@@ -239,14 +235,9 @@ export class InverterComponent implements OnInit, OnDestroy {
     const userAlias = formValue.alias;
 
     const createConfig = {
-      apply: 'true',
-      factoryPid: brand.factoryId,
-      id: componentId,
-      alias: userAlias,
-      enabled: 'true',
-      maxActivePower: newPowerW,
-      'modbus.id': formValue.modbusPort,
-      modbusUnitId: formValue.modbusUnitId,
+      apply: 'true', factoryPid: brand.factoryId, id: componentId,
+      alias: userAlias, enabled: 'true', maxActivePower: newPowerW,
+      'modbus.id': formValue.modbusPort, modbusUnitId: formValue.modbusUnitId,
       propertylist: 'id,alias,enabled,maxActivePower,modbus.id,modbusUnitId'
     };
 
@@ -256,7 +247,10 @@ export class InverterComponent implements OnInit, OnDestroy {
           this.notificationService.showSuccess('Inverter created successfully!');
           this.cancelAdd();
           this.stateService.refreshState();
-          setTimeout(() => this.loadData(), 1500);
+          setTimeout(() => {
+            this.loadData();
+            this._updatePpcController(); // TỰ ĐỘNG CẬP NHẬT PPC
+          }, 1500);
         }
       },
       error: (err) => this.notificationService.showError('Failed to create inverter: ' + err.message)
@@ -280,7 +274,7 @@ export class InverterComponent implements OnInit, OnDestroy {
   saveChanges(inverter: any): void {
     if (this.editForm.invalid) return;
     if (!inverter.pid) {
-      alert('Error: Can not find the inverter to save.');
+      this.notificationService.showError('Error: Could not find PID for this inverter.');
       return;
     }
 
@@ -296,13 +290,9 @@ export class InverterComponent implements OnInit, OnDestroy {
     }
 
     const updateConfig = {
-      apply: 'true',
-      id: inverter.componentId,
-      alias: formValue.alias,
-      enabled: 'true',
-      maxActivePower: formValue.maxActivePower,
-      'modbus.id': formValue.modbusPort,
-      modbusUnitId: formValue.modbusUnitId,
+      apply: 'true', id: inverter.componentId, alias: formValue.alias,
+      enabled: 'true', maxActivePower: formValue.maxActivePower,
+      'modbus.id': formValue.modbusPort, modbusUnitId: formValue.modbusUnitId,
       propertylist: 'id,alias,enabled,maxActivePower,modbus.id,modbusUnitId'
     };
 
@@ -314,7 +304,10 @@ export class InverterComponent implements OnInit, OnDestroy {
           this.notificationService.showSuccess('Inverter updated successfully!');
           this.cancelEdit();
           this.stateService.refreshState();
-          setTimeout(() => this.loadData(), 1000);
+          setTimeout(() => {
+            this.loadData();
+            this._updatePpcController(); // TỰ ĐỘNG CẬP NHẬT PPC
+          }, 1000);
         }
       },
       error: (err) => this.notificationService.showError('Failed to save changes: ' + (err.error || err.message))
@@ -323,7 +316,7 @@ export class InverterComponent implements OnInit, OnDestroy {
 
   deleteInverter(inverter: any): void {
     if (!inverter.pid) {
-      alert('Error: Can not find PID to delete.');
+      this.notificationService.showError('Error: Could not find PID for this inverter.');
       return;
     }
     if (confirm(`Are you sure you want to delete inverter "${inverter.alias}"?`)) {
@@ -332,10 +325,49 @@ export class InverterComponent implements OnInit, OnDestroy {
         next: () => {
           this.notificationService.showSuccess('Inverter deleted successfully!');
           this.stateService.refreshState();
-          setTimeout(() => this.loadData(), 1000);
+          setTimeout(() => {
+            this.loadData();
+            this._updatePpcController(); // TỰ ĐỘNG CẬP NHẬT PPC
+          }, 1000);
         },
         error: (err) => this.notificationService.showError('Failed to delete inverter: ' + err.message)
       });
     }
+  }
+
+  /**
+   * MỚI: Hàm này tự động tìm controller PPC và cập nhật lại danh sách Inverter ID.
+   */
+  private _updatePpcController(): void {
+    forkJoin({
+      felixPids: this.apiService.getFelixPids(),
+      allComponents: this.stateService.components$.pipe(filter(c => c !== null), take(1))
+    }).subscribe(({felixPids, allComponents}) => {
+      const ppcControllerEntry = Object.entries(allComponents).find(([id, config]: [string, any]) => config.factoryId === 'Controller.PvInverter.FixPowerLimit');
+
+      // Chỉ thực hiện nếu controller PPC đã tồn tại
+      if (ppcControllerEntry) {
+        const controller = ppcControllerEntry[1] as any;
+        const alias = controller.properties.alias;
+        const pid = felixPids.find(p => p.nameHint?.includes(`[${alias}]`))?.id;
+
+        if (pid) {
+          const allInverterIds = Object.keys(allComponents).filter(id => id.startsWith('pvInverter'));
+          const updateConfig = {
+            apply: 'true',
+            alias: controller.properties.alias,
+            enabled: controller.properties.enabled,
+            powerLimit: controller.properties.powerLimit,
+            'pvInverter.id': allInverterIds,
+            propertylist: 'alias,enabled,powerLimit,pvInverter.id'
+          };
+
+          this.apiService.updateController(pid, updateConfig).subscribe({
+            next: () => console.log('PPC Controller automatically updated with new inverter list.'),
+            error: (err) => console.error('Failed to automatically update PPC controller:', err)
+          });
+        }
+      }
+    });
   }
 }
