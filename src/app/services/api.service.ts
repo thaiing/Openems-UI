@@ -152,4 +152,27 @@ export class ApiService {
     const headers = new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'});
     return this.http.post(url, body.toString(), {headers, responseType: 'text'});
   }
+
+  updateController(pid: string, config: any): Observable<any> {
+    const fullPidPath = `/system/console/configMgr/${pid}`;
+    let body = new URLSearchParams();
+
+    // SỬA LỖI: Xử lý các giá trị đặc biệt
+    for (const key in config) {
+      if (Object.prototype.hasOwnProperty.call(config, key)) {
+        const value = config[key];
+        if (key === 'enabled' && value === true) {
+          // Khi bật, gửi cả hai giá trị
+          body.append('enabled', 'true');
+          body.append('enabled', 'false');
+        } else {
+          const finalValue = Array.isArray(value) ? value.join(',') : value;
+          body.set(key, finalValue !== null && finalValue !== undefined ? String(finalValue) : '');
+        }
+      }
+    }
+
+    const headers = new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'});
+    return this.http.post(fullPidPath, body.toString(), {headers, responseType: 'text'});
+  }
 }

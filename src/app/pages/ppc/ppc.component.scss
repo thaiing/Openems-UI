@@ -1,5 +1,3 @@
-$primary-color: #012596;
-
 :host {
   display: block;
 }
@@ -8,73 +6,66 @@ $primary-color: #012596;
   padding: 24px;
 }
 
-h1 {
-  font-size: 24px;
-  font-weight: 600;
-  color: $primary-color;
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 24px;
-}
 
-.master-toggle-card {
-  margin-bottom: 24px;
-  padding: 20px 24px !important;
-
-  mat-slide-toggle {
-    font-size: 18px;
-    font-weight: 500;
-  }
-
-  p {
-    font-size: 14px;
-    color: #6c757d;
-    margin: 8px 0 0 0;
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+    color: #012596;
   }
 }
 
-.settings-container {
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.ppc-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 24px;
-  position: relative;
-  transition: filter 0.3s ease; // Hiệu ứng mờ dần
-
-  // Hiệu ứng "mờ" và vô hiệu hóa
-  &.disabled {
-    filter: grayscale(80%) opacity(0.6); // Làm cho các card bị xám và mờ đi
-    pointer-events: none; // Vô hiệu hóa click chuột
-  }
-}
-
-mat-card {
-  padding: 0 !important;
 }
 
 mat-card-header {
-  padding: 16px 24px;
-  border-bottom: 1px solid #e9eef2;
+  justify-content: space-between;
 }
 
-mat-card-title {
-  font-size: 16px;
-  font-weight: 600;
+.header-toggle {
+  margin-left: 16px;
 }
 
 mat-card-content {
-  padding: 24px;
-}
-
-.card-content-grid {
+  padding-top: 24px;
   display: flex;
-  align-items: center;
-  gap: 24px;
+  flex-direction: column;
+  gap: 16px;
+  transition: opacity 0.3s ease;
 
-  mat-slide-toggle {
-    margin-right: auto; // Đẩy ô input sang phải
+  &.disabled-content {
+    opacity: 0.5;
+    pointer-events: none;
   }
 }
 
-.save-button-container {
+.mode-selector {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 32px;
+  gap: 24px;
+  margin-bottom: 8px;
+}
+
+/* SỬA LỖI: Ẩn các nút lên/xuống của ô input type="number" */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
 }
