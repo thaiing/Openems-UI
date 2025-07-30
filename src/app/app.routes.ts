@@ -33,11 +33,7 @@ export const routes: Routes = [
       {path: 'ppc', component: PpcComponent, data: {title: 'PPC'}},
       {path: 'ipsec', component: IpsecComponent, data: {title: 'IPSec'}},
       {path: 'openvpn', component: OpenvpnComponent, data: {title: 'OpenVPN'}},
-      {
-        path: 'account',
-        data: {title: 'Account'},
-        loadComponent: () => import('./pages/account/account.component').then(m => m.AccountComponent)
-      },
+      {path: 'account', component: AccountComponent, data: {title: 'Account'}},
     ]
   },
   {path: '**', redirectTo: 'login'} // Chuyển hướng các đường dẫn lạ về trang login

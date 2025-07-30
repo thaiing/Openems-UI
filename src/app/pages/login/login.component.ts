@@ -10,40 +10,33 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 
 @Component({
-  selector: 'app-login',
-  standalone: true,
-  imports: [
-    CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule,
-    MatInputModule, MatButtonModule, MatIconModule
-  ],
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss']
+    selector: 'app-login',
+    standalone: true,
+    imports: [
+        CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule,
+        MatInputModule, MatButtonModule, MatIconModule
+    ],
+    templateUrl: './login.component.html',
+    styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
-  loginForm: FormGroup;
-  hidePassword = true;
+    loginForm: FormGroup;
+    hidePassword = true;
 
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private notificationService: NotificationService
-  ) {
-    this.loginForm = this.fb.group({
-      username: ['admin', Validators.required],
-      password: ['', Validators.required]
-    });
-  }
-
-  onLogin(): void {
-    if (this.loginForm.invalid) {
-      return;
+    constructor(
+        private fb: FormBuilder,
+        private authService: AuthService
+    ) {
+        this.loginForm = this.fb.group({
+            username: ['admin', Validators.required],
+            password: ['', Validators.required]
+        });
     }
-    // Dùng getRawValue() để lấy cả giá trị của ô username đã bị disable
-    this.authService.login(this.loginForm.getRawValue()).subscribe(success => {
-      if (!success) {
-        this.notificationService.showError('Login failed: Invalid username or password.');
-      }
-      // Nếu thành công, service sẽ tự động chuyển trang
-    });
-  }
+
+    async onLogin(): Promise<void> {
+        if (this.loginForm.invalid) {
+            return;
+        }
+        await this.authService.login(this.loginForm.getRawValue());
+    }
 }

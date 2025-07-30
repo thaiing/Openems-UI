@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {Router, NavigationEnd, RouterOutlet, ActivatedRoute} from '@angular/router';
+import {Router, NavigationEnd, RouterOutlet, ActivatedRoute, RouterLink,} from '@angular/router';
 import {filter, map, mergeMap} from 'rxjs/operators';
 import {MatIconModule} from '@angular/material/icon';
 import {MatButtonModule} from '@angular/material/button';
@@ -13,7 +13,7 @@ import {AuthService} from '../services/auth.service';
   selector: 'app-layout',
   standalone: true,
   imports: [
-    CommonModule, RouterOutlet, MatIconModule,
+    CommonModule, RouterOutlet, MatIconModule, RouterLink,
     MatButtonModule, SecondarySidebarComponent, MatTooltipModule
   ],
   templateUrl: './layout.component.html',

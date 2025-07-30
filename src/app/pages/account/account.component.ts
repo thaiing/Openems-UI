@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {
   FormBuilder,
@@ -33,8 +33,8 @@ export function passwordMatchValidator(control: AbstractControl): ValidationErro
   templateUrl: './account.component.html',
   styleUrls: ['./account.component.scss']
 })
-export class AccountComponent {
-  passwordForm: FormGroup;
+export class AccountComponent implements OnInit {
+  passwordForm!: FormGroup;
   hideOldPassword = true;
   hideNewPassword = true;
   hideConfirmPassword = true;
@@ -44,6 +44,9 @@ export class AccountComponent {
     private authService: AuthService,
     private notificationService: NotificationService
   ) {
+  }
+
+  ngOnInit(): void {
     this.passwordForm = this.fb.group({
       oldPassword: ['', Validators.required],
       newPassword: ['', [Validators.required, Validators.minLength(6)]],
@@ -61,11 +64,9 @@ export class AccountComponent {
       const success = await this.authService.changePassword(oldPassword, newPassword);
       if (success) {
         this.passwordForm.reset();
-        // Tự động đăng xuất để người dùng đăng nhập lại với mật khẩu mới
         setTimeout(() => this.authService.logout(), 2000);
       }
     } catch (error) {
-      // AuthService đã hiển thị thông báo lỗi, không cần làm gì thêm ở đây
       console.error(error);
     }
   }

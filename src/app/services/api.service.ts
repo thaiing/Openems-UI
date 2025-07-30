@@ -41,7 +41,7 @@ export class ApiService {
   }
 
   // ====================================================================
-  // WebSocket Communication
+  // PHẦN 1: Giao tiếp WebSocket (Không thay đổi)
   // ====================================================================
 
   private connect(): void {
@@ -98,9 +98,13 @@ export class ApiService {
   }
 
   // ====================================================================
-  // HTTP Communication with Felix Console
+  // PHẦN 2: Giao tiếp HTTP với Felix Console
   // ====================================================================
 
+  /**
+   * Lấy danh sách PID dài từ trang quản lý Felix.
+   * Dùng cho tất cả các trang cấu hình.
+   */
   getFelixPids(): Observable<any[]> {
     const url = '/system/console/configMgr';
     return this.http.get(url, {responseType: 'text'}).pipe(
@@ -164,16 +168,24 @@ export class ApiService {
     return this.http.post(fullPidPath, body.toString(), {headers, responseType: 'text'});
   }
 
-  // --- CÁC HÀM MỚI ĐƯỢC BỔ SUNG ---
+  // --- CÁC HÀM MỚI ĐƯỢC BỔ SUNG CHO CÁC TÍNH NĂNG MỚI ---
 
+  /**
+   * Lấy thông tin chi tiết của một component bằng PID.
+   * Dùng cho trang Login/Account.
+   */
   getComponentDetails(pid: string): Observable<any> {
     const url = `/system/console/configMgr/${pid}.json`;
     return this.http.get(url);
   }
 
+  /**
+   * Cập nhật một Controller (như PPC).
+   * Xử lý trường hợp đặc biệt của 'enabled'.
+   */
   updateController(pid: string, config: any): Observable<any> {
     const fullPidPath = `/system/console/configMgr/${pid}`;
-    const body = new URLSearchParams();
+    let body = new URLSearchParams();
     for (const key in config) {
       if (Object.prototype.hasOwnProperty.call(config, key)) {
         const value = config[key];
@@ -190,7 +202,10 @@ export class ApiService {
     return this.http.post(fullPidPath, body.toString(), {headers, responseType: 'text'});
   }
 
-  createOrUpdateConfig(pid: string, config: any): Observable<any> {
+  /**
+   * Tạo MỚI một component không có Factory PID (dùng cho User Config).
+   */
+  createConfigComponent(pid: string, config: any): Observable<any> {
     const fullPidPath = `/system/console/configMgr/${pid}`;
     const body = new URLSearchParams();
     body.set('apply', 'true');
@@ -200,6 +215,28 @@ export class ApiService {
         body.set(key, String(config[key]));
       }
     }
+    const headers = new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'});
+    return this.http.post(fullPidPath, body.toString(), {headers, responseType: 'text'});
+  }
+
+  /**
+   * CẬP NHẬT một component không có Factory PID (dùng cho User Config).
+   * Tự động thêm hậu tố ".value" vào các key.
+   */
+  updateConfigComponent(pid: string, config: any): Observable<any> {
+    const fullPidPath = `/system/console/configMgr/${pid}`;
+    const body = new URLSearchParams();
+    body.set('apply', 'true');
+
+    const propertyList = [];
+    for (const key in config) {
+      if (Object.prototype.hasOwnProperty.call(config, key)) {
+        body.set(`${key}.value`, String(config[key]));
+        propertyList.push(key);
+      }
+    }
+    body.set('propertylist', propertyList.join(','));
+
     const headers = new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'});
     return this.http.post(fullPidPath, body.toString(), {headers, responseType: 'text'});
   }
