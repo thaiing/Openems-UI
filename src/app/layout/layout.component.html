@@ -6,11 +6,8 @@
     <img src="assets/images/MAXiComLogo.png" alt="MaxiCom Logo" class="logo-img">
   </div>
   <div class="header-right">
-    <button mat-icon-button class="action-btn">
-      <mat-icon>notifications_none</mat-icon>
-    </button>
-    <button mat-icon-button class="action-btn profile-btn" (click)="openAuthDialog()">
-      <mat-icon>account_circle</mat-icon>
+    <button mat-icon-button (click)="logout()" matTooltip="Logout">
+      <mat-icon>logout</mat-icon>
     </button>
   </div>
 </header>
@@ -23,8 +20,8 @@
     <img src="assets/images/MAXiComLogo.png" alt="MaxiCom Logo" class="logo-img">
     <span class="page-title" *ngIf="currentPageTitle"></span>
   </div>
-  <button mat-icon-button class="action-btn profile-btn" (click)="openAuthDialog()">
-    <mat-icon>account_circle</mat-icon>
+  <button mat-icon-button (click)="logout()" matTooltip="Logout">
+    <mat-icon>logout</mat-icon>
   </button>
 </header>
 

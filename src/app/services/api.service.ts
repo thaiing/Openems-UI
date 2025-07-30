@@ -40,6 +40,10 @@ export class ApiService {
     }
   }
 
+  // ====================================================================
+  // WebSocket Communication
+  // ====================================================================
+
   private connect(): void {
     this.socket$ = webSocket({
       url: '/jsonrpc',
@@ -93,7 +97,10 @@ export class ApiService {
     return this.rpc(request.method, request.params);
   }
 
-  // HÀM QUAN TRỌNG ĐỂ LẤY PID DÀI
+  // ====================================================================
+  // HTTP Communication with Felix Console
+  // ====================================================================
+
   getFelixPids(): Observable<any[]> {
     const url = '/system/console/configMgr';
     return this.http.get(url, {responseType: 'text'}).pipe(
@@ -112,12 +119,28 @@ export class ApiService {
     );
   }
 
+  // --- CÁC HÀM CŨ ĐƯỢC GIỮ LẠI ĐỂ ĐẢM BẢO TƯƠNG THÍCH ---
+
   createSerialPort(factoryPid: string, config: any): Observable<any> {
     const url = `/system/console/configMgr/${factoryPid}`;
     const body = new URLSearchParams();
     for (const key in config) {
       if (Object.prototype.hasOwnProperty.call(config, key)) {
         body.set(key, config[key]);
+      }
+    }
+    const headers = new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'});
+    return this.http.post(url, body.toString(), {headers, responseType: 'text'});
+  }
+
+  createInverter(factoryPid: string, config: any): Observable<any> {
+    const url = `/system/console/configMgr/${factoryPid}`;
+    const body = new URLSearchParams();
+    for (const key in config) {
+      if (Object.prototype.hasOwnProperty.call(config, key)) {
+        const value = config[key];
+        const finalValue = Array.isArray(value) ? value.join(',') : String(value);
+        body.set(key, finalValue);
       }
     }
     const headers = new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'});
@@ -141,28 +164,20 @@ export class ApiService {
     return this.http.post(fullPidPath, body.toString(), {headers, responseType: 'text'});
   }
 
-  createInverter(factoryPid: string, config: any): Observable<any> {
-    const url = `/system/console/configMgr/${factoryPid}`;
-    const body = new URLSearchParams();
-    for (const key in config) {
-      if (Object.prototype.hasOwnProperty.call(config, key)) {
-        body.set(key, String(config[key]));
-      }
-    }
-    const headers = new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'});
-    return this.http.post(url, body.toString(), {headers, responseType: 'text'});
+  // --- CÁC HÀM MỚI ĐƯỢC BỔ SUNG ---
+
+  getComponentDetails(pid: string): Observable<any> {
+    const url = `/system/console/configMgr/${pid}.json`;
+    return this.http.get(url);
   }
 
   updateController(pid: string, config: any): Observable<any> {
     const fullPidPath = `/system/console/configMgr/${pid}`;
-    let body = new URLSearchParams();
-
-    // SỬA LỖI: Xử lý các giá trị đặc biệt
+    const body = new URLSearchParams();
     for (const key in config) {
       if (Object.prototype.hasOwnProperty.call(config, key)) {
         const value = config[key];
         if (key === 'enabled' && value === true) {
-          // Khi bật, gửi cả hai giá trị
           body.append('enabled', 'true');
           body.append('enabled', 'false');
         } else {
@@ -171,7 +186,6 @@ export class ApiService {
         }
       }
     }
-
     const headers = new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'});
     return this.http.post(fullPidPath, body.toString(), {headers, responseType: 'text'});
   }
