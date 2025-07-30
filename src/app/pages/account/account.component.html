@@ -10,7 +10,8 @@
         <mat-form-field appearance="outline">
           <mat-label>Old Password</mat-label>
           <input matInput [type]="hideOldPassword ? 'password' : 'text'" formControlName="oldPassword">
-          <button mat-icon-button matSuffix (click)="hideOldPassword = !hideOldPassword" type="button">
+          <button mat-icon-button matSuffix (click)="hideOldPassword = !hideOldPassword" type="button"
+                  aria-label="Toggle old password visibility">
             <mat-icon>{{ hideOldPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
         </mat-form-field>
@@ -18,7 +19,8 @@
         <mat-form-field appearance="outline">
           <mat-label>New Password</mat-label>
           <input matInput [type]="hideNewPassword ? 'password' : 'text'" formControlName="newPassword">
-          <button mat-icon-button matSuffix (click)="hideNewPassword = !hideNewPassword" type="button">
+          <button mat-icon-button matSuffix (click)="hideNewPassword = !hideNewPassword" type="button"
+                  aria-label="Toggle new password visibility">
             <mat-icon>{{ hideNewPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
         </mat-form-field>
@@ -26,10 +28,11 @@
         <mat-form-field appearance="outline">
           <mat-label>Confirm New Password</mat-label>
           <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword">
-          <button mat-icon-button matSuffix (click)="hideConfirmPassword = !hideConfirmPassword" type="button">
+          <button mat-icon-button matSuffix (click)="hideConfirmPassword = !hideConfirmPassword" type="button"
+                  aria-label="Toggle confirm password visibility">
             <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
-          <mat-error *ngIf="passwordForm.hasError('passwordMismatch')">
+          <mat-error *ngIf="passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched">
             New passwords do not match.
           </mat-error>
         </mat-form-field>

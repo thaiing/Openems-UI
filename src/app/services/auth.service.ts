@@ -2,10 +2,11 @@ import {Injectable, Inject, PLATFORM_ID} from '@angular/core';
 import {isPlatformBrowser} from '@angular/common';
 import {Router} from '@angular/router';
 import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, Observable, of, from, forkJoin, firstValueFrom} from 'rxjs'; // SỬA LỖI: Thêm firstValueFrom
+import {BehaviorSubject, Observable, of, from, forkJoin, firstValueFrom} from 'rxjs';
 import {switchMap, map, catchError, tap} from 'rxjs/operators';
 import {NotificationService} from './notification.service';
 import {ApiService} from './api.service';
+import * as CryptoJS from 'crypto-js';
 
 @Injectable({
   providedIn: 'root'
@@ -29,12 +30,8 @@ export class AuthService {
     }
   }
 
-  private async hashPassword(password: string): Promise<string> {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  private hashPassword(password: string): string {
+    return CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
   }
 
   login(credentials: { username: string, password: string }): Observable<boolean> {
@@ -45,11 +42,10 @@ export class AuthService {
     );
 
     return forkJoin({defaultConfig: defaultConfig$, customConfig: customConfig$}).pipe(
-      switchMap(({defaultConfig, customConfig}) =>
-        from(this.hashPassword(credentials.password)).pipe(
-          map(enteredPasswordHash => ({defaultConfig, customConfig, enteredPasswordHash}))
-        )
-      ),
+      switchMap(({defaultConfig, customConfig}) => {
+        const enteredPasswordHash = this.hashPassword(credentials.password);
+        return of({defaultConfig, customConfig, enteredPasswordHash});
+      }),
       map(({defaultConfig, customConfig, enteredPasswordHash}) => {
         const defaultUser = defaultConfig?.systemInfo?.defaultUser;
         if (!defaultUser) return false;
@@ -79,6 +75,7 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
+  // SỬA LỖI: Bổ sung lại hàm này
   async changePassword(oldPassword: string, newPassword: string): Promise<boolean> {
     const defaultConfig = await firstValueFrom(this.http.get<any>('assets/config/app-config.json'));
     const customConfig = await firstValueFrom(this.apiService.getComponentDetails(this.USER_CONFIG_PID).pipe(
@@ -88,13 +85,13 @@ export class AuthService {
 
     const correctHash = customConfig?.passwordHash?.value || defaultConfig?.systemInfo?.defaultUser.passwordHash;
 
-    const oldPasswordHash = await this.hashPassword(oldPassword);
+    const oldPasswordHash = this.hashPassword(oldPassword);
     if (oldPasswordHash !== correctHash) {
       this.notificationService.showError("Old password is not correct.");
       return false;
     }
 
-    const newPasswordHash = await this.hashPassword(newPassword);
+    const newPasswordHash = this.hashPassword(newPassword);
     const configToSave = {
       username: 'admin',
       passwordHash: newPasswordHash

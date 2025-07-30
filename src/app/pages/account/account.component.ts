@@ -16,7 +16,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {AuthService} from '../../services/auth.service';
 import {NotificationService} from '../../services/notification.service';
 
-// Custom validator to check if passwords match
+// Custom validator để kiểm tra mật khẩu trùng khớp
 export function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
   const password = control.get('newPassword')?.value;
   const confirmPassword = control.get('confirmPassword')?.value;
@@ -51,7 +51,6 @@ export class AccountComponent {
     }, {validators: passwordMatchValidator});
   }
 
-  // SỬA LỖI: Chuyển sang cú pháp async/await
   async onChangePassword(): Promise<void> {
     if (this.passwordForm.invalid) {
       return;
