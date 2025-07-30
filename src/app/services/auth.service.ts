@@ -2,8 +2,8 @@ import {Injectable, Inject, PLATFORM_ID} from '@angular/core';
 import {isPlatformBrowser} from '@angular/common';
 import {Router} from '@angular/router';
 import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, Observable, of, from, forkJoin, firstValueFrom} from 'rxjs';
-import {switchMap, map, catchError} from 'rxjs/operators';
+import {BehaviorSubject, Observable, of, from, firstValueFrom} from 'rxjs';
+import {map, catchError} from 'rxjs/operators';
 import {NotificationService} from './notification.service';
 import {ApiService} from './api.service';
 import * as CryptoJS from 'crypto-js';
@@ -35,33 +35,32 @@ export class AuthService {
   }
 
   // HÀM MỚI: Lấy mật khẩu đúng (ưu tiên backend)
-  private async getCorrectPasswordHash(): Promise<string | null> {
+  private async getCorrectPasswordHash(): Promise<{ hash: string | null, isCustom: boolean }> {
     try {
-      const customConfigProperties = await firstValueFrom(
+      const customConfig = await firstValueFrom(
         this.apiService.getComponentDetails(this.USER_CONFIG_PID).pipe(map((details: any) => details.properties))
       );
-      // SỬA LỖI: Đọc mật khẩu từ mảng properties một cách chính xác
-      const passwordHashProp = customConfigProperties?.find((p: any) => p.key === 'passwordHash');
+      const passwordHashProp = customConfig?.find((p: any) => p.key === 'passwordHash');
       if (passwordHashProp && passwordHashProp.value) {
-        return passwordHashProp.value; // Trả về mật khẩu tùy chỉnh nếu có
+        return {hash: passwordHashProp.value, isCustom: true}; // Trả về mật khẩu tùy chỉnh
       }
     } catch (error) {
       // Bỏ qua lỗi, sẽ dùng mật khẩu mặc định
     }
 
     try {
-      // Chỉ chạy đến đây nếu không có mật khẩu tùy chỉnh
       const defaultConfig = await firstValueFrom(this.http.get<any>('assets/config/app-config.json'));
-      return defaultConfig?.systemInfo?.defaultUser?.passwordHash || null;
+      return {hash: defaultConfig?.systemInfo?.defaultUser?.passwordHash || null, isCustom: false};
     } catch (error) {
       console.error("Could not load default config", error);
-      return null;
+      return {hash: null, isCustom: false};
     }
   }
 
+  // SỬA LỖI: Logic đăng nhập được viết lại hoàn toàn
   async login(credentials: { username: string, password: string }): Promise<void> {
     const enteredPasswordHash = this.hashPassword(credentials.password);
-    const correctHash = await this.getCorrectPasswordHash();
+    const {hash: correctHash} = await this.getCorrectPasswordHash();
 
     if (correctHash && enteredPasswordHash === correctHash) {
       this.handleLoginSuccess();
@@ -87,7 +86,7 @@ export class AuthService {
   }
 
   async changePassword(oldPassword: string, newPassword: string): Promise<boolean> {
-    const correctHash = await this.getCorrectPasswordHash();
+    const {hash: correctHash, isCustom} = await this.getCorrectPasswordHash();
 
     const oldPasswordHash = this.hashPassword(oldPassword);
     if (oldPasswordHash !== correctHash) {
@@ -102,11 +101,9 @@ export class AuthService {
     };
 
     try {
-      const customConfigExists = !!(await firstValueFrom(this.apiService.getComponentDetails(this.USER_CONFIG_PID).pipe(map(() => true), catchError(() => of(false)))));
-
-      if (customConfigExists) {
+      if (isCustom) { // Nếu đã có mật khẩu tùy chỉnh, cập nhật
         await firstValueFrom(this.apiService.updateConfigComponent(this.USER_CONFIG_PID, configToSave));
-      } else {
+      } else { // Nếu chưa, tạo mới
         await firstValueFrom(this.apiService.createConfigComponent(this.USER_CONFIG_PID, configToSave));
       }
       this.notificationService.showSuccess("Password changed successfully. Please log in again.");

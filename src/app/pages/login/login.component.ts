@@ -33,6 +33,7 @@ export class LoginComponent {
         });
     }
 
+    // SỬA LỖI: Dùng async/await để gọi hàm login mới
     async onLogin(): Promise<void> {
         if (this.loginForm.invalid) {
             return;
