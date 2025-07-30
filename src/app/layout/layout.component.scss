@@ -43,6 +43,12 @@ $sidebar-width: 250px;
   color: #ffffff;
 }
 
+.header-right, .header-right-mobile {
+  button mat-icon {
+    color: #ffffff; // Đặt màu icon thành màu trắng
+  }
+}
+
 .profile-btn mat-icon {
   font-size: 32px;
   width: 32px;

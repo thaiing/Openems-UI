@@ -3,9 +3,10 @@ import {isPlatformBrowser} from '@angular/common';
 import {Router} from '@angular/router';
 import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, Observable, of, from, firstValueFrom} from 'rxjs';
-import {map, catchError} from 'rxjs/operators';
+import {filter, take, map, catchError} from 'rxjs/operators';
 import {NotificationService} from './notification.service';
 import {ApiService} from './api.service';
+import {StateService} from './state.service';
 import * as CryptoJS from 'crypto-js';
 
 @Injectable({
@@ -15,13 +16,15 @@ export class AuthService {
   private _isLoggedIn = new BehaviorSubject<boolean>(false);
   public readonly isLoggedIn$ = this._isLoggedIn.asObservable();
 
-  private readonly USER_CONFIG_PID = 'com.maxicom.userconfig';
+  private readonly USER_COMPONENT_FACTORY_PID = 'Bridge.Onewire';
+  private readonly DEFAULT_USERNAME = 'admin';
 
   constructor(
     private router: Router,
     private http: HttpClient,
     private notificationService: NotificationService,
     private apiService: ApiService,
+    private stateService: StateService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     if (isPlatformBrowser(this.platformId)) {
@@ -34,38 +37,40 @@ export class AuthService {
     return CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
   }
 
-  // HÀM MỚI: Lấy mật khẩu đúng (ưu tiên backend)
-  private async getCorrectPasswordHash(): Promise<{ hash: string | null, isCustom: boolean }> {
-    try {
-      const customConfig = await firstValueFrom(
-        this.apiService.getComponentDetails(this.USER_CONFIG_PID).pipe(map((details: any) => details.properties))
-      );
-      const passwordHashProp = customConfig?.find((p: any) => p.key === 'passwordHash');
-      if (passwordHashProp && passwordHashProp.value) {
-        return {hash: passwordHashProp.value, isCustom: true}; // Trả về mật khẩu tùy chỉnh
-      }
-    } catch (error) {
-      // Bỏ qua lỗi, sẽ dùng mật khẩu mặc định
+  private async getCorrectPasswordHash(): Promise<string | null> {
+    const allComponents = await firstValueFrom(this.stateService.components$.pipe(filter(c => c !== null), take(1)));
+
+    // Tìm component người dùng bằng ID (chính là username)
+    const userComponent = allComponents[this.DEFAULT_USERNAME];
+
+    if (userComponent && userComponent.factoryId === this.USER_COMPONENT_FACTORY_PID && userComponent.properties && userComponent.properties.alias) {
+      // Mật khẩu được lưu trong trường 'alias'
+      return userComponent.properties.alias;
     }
 
+    // Nếu không có, dùng mật khẩu mặc định
     try {
       const defaultConfig = await firstValueFrom(this.http.get<any>('assets/config/app-config.json'));
-      return {hash: defaultConfig?.systemInfo?.defaultUser?.passwordHash || null, isCustom: false};
+      return defaultConfig?.systemInfo?.defaultUser?.passwordHash || null;
     } catch (error) {
       console.error("Could not load default config", error);
-      return {hash: null, isCustom: false};
+      return null;
     }
   }
 
-  // SỬA LỖI: Logic đăng nhập được viết lại hoàn toàn
   async login(credentials: { username: string, password: string }): Promise<void> {
+    if (credentials.username !== this.DEFAULT_USERNAME) {
+      this.notificationService.showError('Login failed: Invalid username.');
+      return;
+    }
+
     const enteredPasswordHash = this.hashPassword(credentials.password);
-    const {hash: correctHash} = await this.getCorrectPasswordHash();
+    const correctHash = await this.getCorrectPasswordHash();
 
     if (correctHash && enteredPasswordHash === correctHash) {
       this.handleLoginSuccess();
     } else {
-      this.notificationService.showError('Login failed: Invalid username or password.');
+      this.notificationService.showError('Login failed: Invalid password.');
     }
   }
 
@@ -86,7 +91,7 @@ export class AuthService {
   }
 
   async changePassword(oldPassword: string, newPassword: string): Promise<boolean> {
-    const {hash: correctHash, isCustom} = await this.getCorrectPasswordHash();
+    const correctHash = await this.getCorrectPasswordHash();
 
     const oldPasswordHash = this.hashPassword(oldPassword);
     if (oldPasswordHash !== correctHash) {
@@ -95,17 +100,19 @@ export class AuthService {
     }
 
     const newPasswordHash = this.hashPassword(newPassword);
+
+    // Payload để tạo hoặc cập nhật component Bridge.Onewire
     const configToSave = {
-      username: 'admin',
-      passwordHash: newPasswordHash
+      apply: 'true',
+      factoryPid: this.USER_COMPONENT_FACTORY_PID,
+      id: this.DEFAULT_USERNAME, // Component ID là username
+      alias: newPasswordHash,    // Password hash được lưu vào alias
+      propertylist: 'id,alias'
     };
 
     try {
-      if (isCustom) { // Nếu đã có mật khẩu tùy chỉnh, cập nhật
-        await firstValueFrom(this.apiService.updateConfigComponent(this.USER_CONFIG_PID, configToSave));
-      } else { // Nếu chưa, tạo mới
-        await firstValueFrom(this.apiService.createConfigComponent(this.USER_CONFIG_PID, configToSave));
-      }
+      // Dùng hàm createComponent mới để tạo/cập nhật
+      await firstValueFrom(this.apiService.createUserConfigComponent(this.USER_COMPONENT_FACTORY_PID, configToSave));
       this.notificationService.showSuccess("Password changed successfully. Please log in again.");
       return true;
     } catch (err: any) {

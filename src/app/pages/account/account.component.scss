@@ -1,22 +1,50 @@
-.page-container {
-  padding: 24px;
+:host {
+  display: block;
 }
 
-.page-header h1 {
-  font-size: 24px;
-  font-weight: 600;
+// Biến màu để dễ quản lý
+$primary-color: #012596;
+
+.page-container {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center; // Căn giữa card theo chiều ngang
+}
+
+.page-header {
+  width: 100%;
+  max-width: 550px; // Giới hạn chiều rộng
   margin-bottom: 24px;
-  color: #012596;
+
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: $primary-color;
+    margin: 0;
+  }
 }
 
 .form-card {
-  max-width: 500px;
+  width: 100%;
+  max-width: 550px; // Giới hạn chiều rộng
+}
+
+mat-card-header {
+  .mat-mdc-card-avatar {
+    background-color: #e3f2fd;
+    color: $primary-color;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 form {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding-top: 16px;
 }
 
 .action-buttons {

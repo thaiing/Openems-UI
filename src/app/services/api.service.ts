@@ -240,4 +240,16 @@ export class ApiService {
     const headers = new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'});
     return this.http.post(fullPidPath, body.toString(), {headers, responseType: 'text'});
   }
+
+  createUserConfigComponent(factoryPid: string, config: any): Observable<any> {
+    const url = `/system/console/configMgr/${factoryPid}`;
+    const body = new URLSearchParams();
+    for (const key in config) {
+      if (Object.prototype.hasOwnProperty.call(config, key)) {
+        body.set(key, String(config[key]));
+      }
+    }
+    const headers = new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'});
+    return this.http.post(url, body.toString(), {headers, responseType: 'text'});
+  }
 }
