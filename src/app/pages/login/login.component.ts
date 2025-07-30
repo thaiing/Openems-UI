@@ -8,7 +8,6 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
-import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -39,10 +38,12 @@ export class LoginComponent {
     if (this.loginForm.invalid) {
       return;
     }
+    // Dùng getRawValue() để lấy cả giá trị của ô username đã bị disable
     this.authService.login(this.loginForm.getRawValue()).subscribe(success => {
       if (!success) {
         this.notificationService.showError('Login failed: Invalid username or password.');
       }
+      // Nếu thành công, service sẽ tự động chuyển trang
     });
   }
 }

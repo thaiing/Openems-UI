@@ -189,4 +189,18 @@ export class ApiService {
     const headers = new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'});
     return this.http.post(fullPidPath, body.toString(), {headers, responseType: 'text'});
   }
+
+  createOrUpdateConfig(pid: string, config: any): Observable<any> {
+    const fullPidPath = `/system/console/configMgr/${pid}`;
+    const body = new URLSearchParams();
+    body.set('apply', 'true');
+    body.set('propertylist', Object.keys(config).join(','));
+    for (const key in config) {
+      if (Object.prototype.hasOwnProperty.call(config, key)) {
+        body.set(key, String(config[key]));
+      }
+    }
+    const headers = new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'});
+    return this.http.post(fullPidPath, body.toString(), {headers, responseType: 'text'});
+  }
 }

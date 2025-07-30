@@ -6,6 +6,9 @@
     <img src="assets/images/MAXiComLogo.png" alt="MaxiCom Logo" class="logo-img">
   </div>
   <div class="header-right">
+    <button mat-icon-button routerLink="/account" matTooltip="Account Settings">
+      <mat-icon>manage_accounts</mat-icon>
+    </button>
     <button mat-icon-button (click)="logout()" matTooltip="Logout">
       <mat-icon>logout</mat-icon>
     </button>
@@ -20,9 +23,14 @@
     <img src="assets/images/MAXiComLogo.png" alt="MaxiCom Logo" class="logo-img">
     <span class="page-title" *ngIf="currentPageTitle"></span>
   </div>
-  <button mat-icon-button (click)="logout()" matTooltip="Logout">
-    <mat-icon>logout</mat-icon>
-  </button>
+  <div class="header-right-mobile">
+    <button mat-icon-button routerLink="/account" matTooltip="Account Settings">
+      <mat-icon>manage_accounts</mat-icon>
+    </button>
+    <button mat-icon-button (click)="logout()" matTooltip="Logout">
+      <mat-icon>logout</mat-icon>
+    </button>
+  </div>
 </header>
 
 

@@ -11,6 +11,7 @@ import {StorageComponent} from './pages/storage/storage.component';
 import {PpcComponent} from './pages/ppc/ppc.component';
 import {IpsecComponent} from './pages/ipsec/ipsec.component';
 import {OpenvpnComponent} from './pages/openvpn/openvpn.component';
+import {AccountComponent} from './pages/account/account.component';
 
 export const routes: Routes = [
   {
@@ -32,6 +33,11 @@ export const routes: Routes = [
       {path: 'ppc', component: PpcComponent, data: {title: 'PPC'}},
       {path: 'ipsec', component: IpsecComponent, data: {title: 'IPSec'}},
       {path: 'openvpn', component: OpenvpnComponent, data: {title: 'OpenVPN'}},
+      {
+        path: 'account',
+        data: {title: 'Account'},
+        loadComponent: () => import('./pages/account/account.component').then(m => m.AccountComponent)
+      },
     ]
   },
   {path: '**', redirectTo: 'login'} // Chuyển hướng các đường dẫn lạ về trang login
