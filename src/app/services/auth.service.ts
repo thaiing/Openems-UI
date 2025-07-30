@@ -16,7 +16,7 @@ export class AuthService {
   private _isLoggedIn = new BehaviorSubject<boolean>(false);
   public readonly isLoggedIn$ = this._isLoggedIn.asObservable();
 
-  private readonly USER_COMPONENT_FACTORY_PID = 'Bridge.Onewire';
+  private readonly USER_COMPONENT_FACTORY_PID = 'Controller.io.openems.edge.account.config';
   private readonly DEFAULT_USERNAME = 'admin';
 
   constructor(
