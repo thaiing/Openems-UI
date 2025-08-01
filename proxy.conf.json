@@ -8,5 +8,9 @@
     "target": "http://222.252.22.158:5555",
     "secure": false,
     "auth": "admin:admin"
+  },
+  "/api": {
+    "target": "http://192.168.4.93:5000",
+    "secure": false
   }
 }

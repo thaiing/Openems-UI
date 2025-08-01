@@ -1,14 +1,17 @@
-$primary-color: #012596;
-
 :host {
   display: block;
 }
 
+// Biến màu
+$primary-color: #012596;
+$border-color: #e0e0e0;
+$label-color: #6c757d;
+
 .page-container {
-  padding: 16px;
+  padding: 24px;
 }
 
-h1 {
+.page-header h1 {
   font-size: 24px;
   font-weight: 600;
   color: $primary-color;
@@ -16,78 +19,82 @@ h1 {
 }
 
 .tab-content {
-  padding: 24px 8px;
+  padding: 24px 0;
 }
 
-// --- Ethernet Tab Styles ---
-.eth-card {
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e9eef2;
+// --- Ethernet Tab ---
+.ethernet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 24px;
 }
 
 .eth-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #e9eef2;
-  padding-bottom: 16px;
   margin-bottom: 16px;
 
   h3 {
     margin: 0;
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 500;
   }
 }
 
 .eth-details {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-
   .detail-item {
-    span {
-      display: block;
-      color: #6c757d;
-      font-size: 14px;
-      margin-bottom: 4px;
-    }
-
-    strong {
-      font-size: 16px;
-    }
-  }
-}
-
-.eth-edit-form {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-
-  .dhcp-checkbox {
-    grid-column: 1 / -1; // Checkbox chiếm cả hàng
-    margin-bottom: 12px;
-  }
-}
-
-// --- APN Tab Styles ---
-.apn-card {
-  max-width: 600px;
-  margin: 0 auto;
-
-  form {
     display: flex;
-    flex-direction: column;
-    gap: 20px;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 15px;
+    border-bottom: 1px dashed $border-color;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    span {
+      color: $label-color;
+    }
+  }
+}
+
+.dhcp-toggle {
+  margin-bottom: 20px;
+}
+
+.static-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: opacity 0.3s;
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
   }
 }
 
 .action-buttons {
   display: flex;
+  justify-content: flex-end;
   gap: 12px;
-  margin-top: 16px;
+  margin-top: 24px;
+}
+
+// --- 4G Tab ---
+.apn-card {
+  max-width: 500px;
+  margin: 0 auto;
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+.apn-enable {
+  margin-bottom: 16px;
 }

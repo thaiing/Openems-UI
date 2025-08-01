@@ -252,4 +252,12 @@ export class ApiService {
     const headers = new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'});
     return this.http.post(url, body.toString(), {headers, responseType: 'text'});
   }
+
+  getNetworkConfig(): Observable<any> {
+    return this.http.get('/api/network-config');
+  }
+
+  updateNetworkConfig(ifaceName: string, config: any): Observable<any> {
+    return this.http.post(`/api/network-config/${ifaceName}`, config);
+  }
 }
