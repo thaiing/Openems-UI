@@ -5,6 +5,10 @@ import {Observable, Subject, tap, catchError, EMPTY, map, filter, retry, timer, 
 import {v4 as uuidv4} from 'uuid';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 
+// ====================================================================
+// ĐỊNH NGHĨA CÁC INTERFACE
+// ====================================================================
+
 export interface JsonRpcRequest {
   jsonrpc: '2.0';
   id: string;
@@ -21,6 +25,17 @@ export interface JsonRpcResponse {
   params?: any;
 }
 
+// Interface mới cho cấu hình mạng
+export interface NetworkConfig {
+  id: string;
+  displayName: string;
+  isDhcp: boolean;
+  ipAddress: string;
+  subnetMask: string;
+  gateway: string;
+}
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -30,6 +45,9 @@ export class ApiService {
   public messages$ = this.messageSubject.asObservable();
   private isConnected = false;
   private edgeId = '0';
+
+  // URL cho API network viết bằng Python
+  private networkApiUrl = 'http://192.168.4.93:5000';
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -41,7 +59,7 @@ export class ApiService {
   }
 
   // ====================================================================
-  // PHẦN 1: Giao tiếp WebSocket (Không thay đổi)
+  // PHẦN 1: Giao tiếp WebSocket (Giữ nguyên)
   // ====================================================================
 
   private connect(): void {
@@ -98,13 +116,9 @@ export class ApiService {
   }
 
   // ====================================================================
-  // PHẦN 2: Giao tiếp HTTP với Felix Console
+  // PHẦN 2: Giao tiếp HTTP với Felix Console (Giữ nguyên)
   // ====================================================================
 
-  /**
-   * Lấy danh sách PID dài từ trang quản lý Felix.
-   * Dùng cho tất cả các trang cấu hình.
-   */
   getFelixPids(): Observable<any[]> {
     const url = '/system/console/configMgr';
     return this.http.get(url, {responseType: 'text'}).pipe(
@@ -122,8 +136,6 @@ export class ApiService {
       })
     );
   }
-
-  // --- CÁC HÀM CŨ ĐƯỢC GIỮ LẠI ĐỂ ĐẢM BẢO TƯƠNG THÍCH ---
 
   createSerialPort(factoryPid: string, config: any): Observable<any> {
     const url = `/system/console/configMgr/${factoryPid}`;
@@ -168,21 +180,11 @@ export class ApiService {
     return this.http.post(fullPidPath, body.toString(), {headers, responseType: 'text'});
   }
 
-  // --- CÁC HÀM MỚI ĐƯỢC BỔ SUNG CHO CÁC TÍNH NĂNG MỚI ---
-
-  /**
-   * Lấy thông tin chi tiết của một component bằng PID.
-   * Dùng cho trang Login/Account.
-   */
   getComponentDetails(pid: string): Observable<any> {
     const url = `/system/console/configMgr/${pid}.json`;
     return this.http.get(url);
   }
 
-  /**
-   * Cập nhật một Controller (như PPC).
-   * Xử lý trường hợp đặc biệt của 'enabled'.
-   */
   updateController(pid: string, config: any): Observable<any> {
     const fullPidPath = `/system/console/configMgr/${pid}`;
     let body = new URLSearchParams();
@@ -202,9 +204,6 @@ export class ApiService {
     return this.http.post(fullPidPath, body.toString(), {headers, responseType: 'text'});
   }
 
-  /**
-   * Tạo MỚI một component không có Factory PID (dùng cho User Config).
-   */
   createConfigComponent(pid: string, config: any): Observable<any> {
     const fullPidPath = `/system/console/configMgr/${pid}`;
     const body = new URLSearchParams();
@@ -219,10 +218,6 @@ export class ApiService {
     return this.http.post(fullPidPath, body.toString(), {headers, responseType: 'text'});
   }
 
-  /**
-   * CẬP NHẬT một component không có Factory PID (dùng cho User Config).
-   * Tự động thêm hậu tố ".value" vào các key.
-   */
   updateConfigComponent(pid: string, config: any): Observable<any> {
     const fullPidPath = `/system/console/configMgr/${pid}`;
     const body = new URLSearchParams();
@@ -253,11 +248,25 @@ export class ApiService {
     return this.http.post(url, body.toString(), {headers, responseType: 'text'});
   }
 
-  getNetworkConfig(): Observable<any> {
-    return this.http.get('/api/network-config');
+  // ====================================================================
+  // PHẦN 3: Giao tiếp HTTP với API Network (Phần mới được thêm vào)
+  // ====================================================================
+
+  /**
+   * Lấy danh sách cấu hình mạng từ backend Python.
+   */
+  getNetworkConfigs(): Observable<NetworkConfig[]> {
+    const url = `${this.networkApiUrl}/api/network-config`;
+    return this.http.get<NetworkConfig[]>(url);
   }
 
-  updateNetworkConfig(ifaceName: string, config: any): Observable<any> {
-    return this.http.post(`/api/network-config/${ifaceName}`, config);
+  /**
+   * Cập nhật cấu hình mạng cho một interface cụ thể.
+   * @param ifaceName Tên interface (ví dụ: 'enp2s0')
+   * @param config Dữ liệu cấu hình mới
+   */
+  setNetworkConfig(ifaceName: string, config: Partial<NetworkConfig>): Observable<NetworkConfig> {
+    const url = `${this.networkApiUrl}/api/network-config/${ifaceName}`;
+    return this.http.post<NetworkConfig>(url, config);
   }
 }

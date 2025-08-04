@@ -1,97 +1,121 @@
 <div class="page-container">
-  <div class="page-header">
-    <h1>Network Configuration</h1>
-  </div>
+  <h1>Network Configuration</h1>
 
-  <div *ngIf="isLoading" class="loading-state">
-    <mat-spinner diameter="50"></mat-spinner>
-    <p>Loading Network Settings...</p>
-  </div>
+  <nav class="tab-nav">
+    <a (click)="selectTab('ethernet')" [class.active]="activeTab === 'ethernet'">
+      <i class="fas fa-network-wired"></i> Ethernet
+    </a>
+    <a (click)="selectTab('4g')" [class.active]="activeTab === '4g'">
+      <i class="fas fa-sim-card"></i> 4G/LTE
+    </a>
+  </nav>
 
-  <mat-tab-group animationDuration="0ms" *ngIf="!isLoading">
-    <mat-tab label="Ethernet">
-      <div class="tab-content ethernet-grid">
-        <mat-card class="eth-card" *ngFor="let port of ports">
-          <div *ngIf="!port.isEditing">
-            <mat-card-header>
-              <mat-card-title>{{ port.displayName }}</mat-card-title>
-              <button mat-icon-button (click)="editPort(port)">
-                <mat-icon>edit</mat-icon>
-              </button>
-            </mat-card-header>
-            <mat-card-content class="eth-details">
-              <div class="detail-item"><span>DHCP:</span> <strong>{{ port.isDhcp ? 'Enabled' : 'Disabled' }}</strong>
+  <div class="tab-content">
+    <div class="tab-pane" [class.active]="activeTab === 'ethernet'">
+      <div *ngIf="isLoading" class="loading-container">
+        <div class="spinner"></div>
+      </div>
+      <div *ngIf="error" class="error-card">{{ error }}</div>
+
+      <div *ngIf="!isLoading && !error" class="card">
+        <div class="card-header">
+          <h2>Ethernet Interfaces</h2>
+        </div>
+        <div class="card-content">
+          <ng-container *ngFor="let config of networkConfigs; let i = index">
+            <div class="interface-row" [formGroup]="networkForms[config.id]">
+              <div class="row-header">
+                <h3>{{ config.displayName }}</h3>
               </div>
-              <div class="detail-item"><span>IP Address:</span> <strong>{{ port.ipAddress || 'N/A' }}</strong></div>
-              <div class="detail-item"><span>Subnet Mask:</span> <strong>{{ port.subnetMask || 'N/A' }}</strong></div>
-              <div class="detail-item"><span>Gateway:</span> <strong>{{ port.gateway || 'N/A' }}</strong></div>
-            </mat-card-content>
-          </div>
-
-          <div *ngIf="port.isEditing" class="edit-mode">
-            <mat-card-header>
-              <mat-card-title>{{ port.displayName }} - Editing</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <form [formGroup]="editForms[port.id]" (ngSubmit)="onSaveChanges(port.id)">
-                <mat-slide-toggle formControlName="isDhcp" class="dhcp-toggle">Automatic (DHCP)</mat-slide-toggle>
-                <div class="static-fields">
-                  <mat-form-field appearance="outline">
-                    <mat-label>IP Address</mat-label>
-                    <input matInput formControlName="ipAddress">
-                  </mat-form-field>
-                  <mat-form-field appearance="outline">
-                    <mat-label>Subnet Mask</mat-label>
-                    <input matInput formControlName="subnetMask">
-                  </mat-form-field>
-                  <mat-form-field appearance="outline">
-                    <mat-label>Gateway</mat-label>
-                    <input matInput formControlName="gateway">
-                  </mat-form-field>
+              <div class="row-content">
+                <div class="form-field mode-field">
+                  <label>Mode</label>
+                  <div class="radio-group-pills">
+                    <label class="radio-pill">
+                      <input type="radio" formControlName="isDhcp" [value]="true">
+                      <span>Automatic (DHCP)</span>
+                    </label>
+                    <label class="radio-pill">
+                      <input type="radio" formControlName="isDhcp" [value]="false">
+                      <span>Manual</span>
+                    </label>
+                  </div>
                 </div>
-                <div class="action-buttons">
-                  <button mat-stroked-button type="button" (click)="cancelEdit(port)">Cancel</button>
-                  <button mat-flat-button color="primary" type="submit"
-                          [disabled]="editForms[port.id].invalid || editForms[port.id].pristine">Save
+                <div class="form-field ip-field">
+                  <label>IP Address</label>
+                  <input type="text" formControlName="ipAddress">
+                </div>
+                <div class="form-field ip-field">
+                  <label>Subnet Mask</label>
+                  <input type="text" formControlName="subnetMask">
+                </div>
+                <div class="form-field ip-field">
+                  <label>Gateway</label>
+                  <input type="text" formControlName="gateway">
+                </div>
+                <div class="form-field action-field">
+                  <button (click)="onSave(config.id)"
+                          [disabled]="networkForms[config.id].pristine || networkForms[config.id].disabled"
+                          class="button-primary">
+                    Save
                   </button>
                 </div>
-              </form>
-            </mat-card-content>
-          </div>
-        </mat-card>
-      </div>
-    </mat-tab>
-
-    <mat-tab label="4G">
-      <div class="tab-content">
-        <mat-card class="apn-card">
-          <mat-card-title>4G Configuration</mat-card-title>
-          <mat-card-content>
-            <form [formGroup]="apnForm" (ngSubmit)="saveApn()">
-              <mat-checkbox formControlName="enable" class="apn-enable">Enable 4G</mat-checkbox>
-              <mat-form-field appearance="outline">
-                <mat-label>APN</mat-label>
-                <input matInput formControlName="apn">
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Username</mat-label>
-                <input matInput formControlName="username">
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Password</mat-label>
-                <input matInput formControlName="password" type="password">
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Server</mat-label>
-                <input matInput formControlName="server">
-              </mat-form-field>
-              <div class="action-buttons">
-                <button mat-flat-button color="primary" type="submit">Save</button>
               </div>
-            </form>
-          </mat-card-content>
-        </mat-card>
+            </div>
+            <hr *ngIf="i < networkConfigs.length - 1" class="row-divider">
+          </ng-container>
+        </div>
       </div>
-    </mat-tab>
-  </mat-tab-group>
+    </div>
+
+    <div class="tab-pane" [class.active]="activeTab === '4g'">
+      <div class="card">
+        <div class="card-header">
+          <h2>4G/LTE Settings</h2>
+        </div>
+        <div class="card-content">
+          <div class="setting-row">
+            <label class="setting-label">Enable 4G/LTE</label>
+            <div class="setting-control">
+              <label class="switch">
+                <input type="checkbox" id="lte-enable">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+          <hr class="row-divider">
+          <div class="setting-row">
+            <label class="setting-label" for="apn">APN</label>
+            <div class="setting-control">
+              <input type="text" id="apn" placeholder="e.g., internet">
+            </div>
+          </div>
+          <hr class="row-divider">
+          <div class="setting-row">
+            <label class="setting-label" for="username">Username</label>
+            <div class="setting-control">
+              <input type="text" id="username" placeholder="(Optional)">
+            </div>
+          </div>
+          <hr class="row-divider">
+          <div class="setting-row">
+            <label class="setting-label" for="password">Password</label>
+            <div class="setting-control">
+              <input type="password" id="password" placeholder="(Optional)">
+            </div>
+          </div>
+          <hr class="row-divider">
+          <div class="setting-row">
+            <label class="setting-label" for="server">Server</label>
+            <div class="setting-control">
+              <input type="text" id="server" placeholder="(Optional)">
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="button-primary" disabled>Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

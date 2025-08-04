@@ -1,133 +1,121 @@
 import {Component, OnInit} from '@angular/core';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {CommonModule} from '@angular/common';
-import {ReactiveFormsModule} from '@angular/forms';
-import {MatCardModule} from '@angular/material/card';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatInputModule} from '@angular/material/input';
-import {MatButtonModule} from '@angular/material/button';
-import {MatSlideToggleModule} from '@angular/material/slide-toggle';
-import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
-import {MatTabsModule} from '@angular/material/tabs';
-import {MatCheckboxModule} from '@angular/material/checkbox';
-import {MatIconModule} from '@angular/material/icon'; // SỬA LỖI: Thêm MatIconModule
-import {ApiService} from '../../services/api.service';
+
+import {ApiService, NetworkConfig} from '../../services/api.service';
 import {NotificationService} from '../../services/notification.service';
 
 @Component({
   selector: 'app-network',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule,
-    MatInputModule, MatButtonModule, MatSlideToggleModule, MatProgressSpinnerModule,
-    MatTabsModule, MatCheckboxModule, MatIconModule // SỬA LỖI: Thêm MatIconModule
+    CommonModule,
+    ReactiveFormsModule
   ],
   templateUrl: './network.component.html',
   styleUrls: ['./network.component.scss']
 })
 export class NetworkComponent implements OnInit {
+  networkConfigs: NetworkConfig[] = [];
   isLoading = true;
-  ports: any[] = [];
-  editForms: { [key: string]: FormGroup } = {};
-  apnForm!: FormGroup;
+  error: string | null = null;
+
+  networkForms: { [key: string]: FormGroup } = {};
+  activeTab: 'ethernet' | '4g' = 'ethernet';
 
   constructor(
-    private fb: FormBuilder,
     private apiService: ApiService,
+    private fb: FormBuilder,
     private notificationService: NotificationService
   ) {
   }
 
   ngOnInit(): void {
     this.loadNetworkData();
+  }
 
-    // Khởi tạo form cho tab 4G
-    this.apnForm = this.fb.group({
-      enable: [false],
-      apn: [''],
-      username: [''],
-      password: [''],
-      server: ['']
-    });
+  selectTab(tab: 'ethernet' | '4g'): void {
+    this.activeTab = tab;
   }
 
   loadNetworkData(): void {
     this.isLoading = true;
-    this.apiService.getNetworkConfig().subscribe({
-      next: (data: any[]) => {
-        this.ports = data.map(port => ({...port, isEditing: false}));
-        this.ports.forEach(port => {
-          this.editForms[port.id] = this.createEditForm(port);
-        });
+    this.apiService.getNetworkConfigs().subscribe({
+      next: (data) => {
+        this.networkConfigs = data;
+        this.buildForms();
         this.isLoading = false;
+        this.error = null;
       },
       error: (err) => {
-        this.notificationService.showError("Failed to load network data.");
+        console.error('Failed to fetch network config', err);
+        this.error = 'Could not load network configuration. The backend API might be down or blocked.';
         this.isLoading = false;
+        this.networkConfigs = [];
       }
     });
   }
 
-  createEditForm(portData: any): FormGroup {
-    const form = this.fb.group({
-      isDhcp: [portData.isDhcp],
-      ipAddress: [portData.ipAddress, Validators.required],
-      subnetMask: [portData.subnetMask, Validators.required],
-      gateway: [portData.gateway]
+  buildForms(): void {
+    this.networkConfigs.forEach(config => {
+      const form = this.fb.group({
+        isDhcp: [config.isDhcp, Validators.required],
+        ipAddress: [config.ipAddress, [Validators.required, Validators.pattern(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/)]],
+        subnetMask: [config.subnetMask, [Validators.required, Validators.pattern(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/)]],
+        gateway: [config.gateway, [Validators.required, Validators.pattern(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/)]]
+      });
+
+      form.get('isDhcp')?.valueChanges.subscribe(isDhcpValue => {
+        this.toggleStaticIpValidators(form, isDhcpValue ?? false);
+      });
+
+      this.toggleStaticIpValidators(form, config.isDhcp);
+      this.networkForms[config.id] = form;
     });
-    this.toggleStaticFields(form, portData.isDhcp);
-    form.get('isDhcp')?.valueChanges.subscribe(isDhcp => {
-      this.toggleStaticFields(form, isDhcp);
-    });
-    return form;
   }
 
-  toggleStaticFields(form: FormGroup, isDhcp: boolean): void {
+  toggleStaticIpValidators(form: FormGroup, isDhcp: boolean): void {
     const fields = ['ipAddress', 'subnetMask', 'gateway'];
     fields.forEach(field => {
+      const control = form.get(field);
       if (isDhcp) {
-        form.get(field)?.disable();
+        control?.disable();
       } else {
-        form.get(field)?.enable();
+        control?.enable();
       }
     });
   }
 
-  onSaveChanges(portId: string): void {
-    const form = this.editForms[portId];
+  onSave(configId: string): void {
+    const form = this.networkForms[configId];
     if (form.invalid) {
-      this.notificationService.showError("Please fill in all required fields.");
+      this.notificationService.showError('Please fill in all required fields correctly.');
+      form.markAllAsTouched();
       return;
     }
 
-    this.apiService.updateNetworkConfig(portId, form.value).subscribe({
-      next: () => {
-        this.notificationService.showSuccess(`Configuration for ${portId} saved successfully.`);
-        setTimeout(() => this.loadNetworkData(), 2000);
+    const formData = form.getRawValue();
+    form.disable(); // Disable form while saving
+
+    this.apiService.setNetworkConfig(configId, formData).subscribe({
+      next: (updatedConfig) => {
+        this.notificationService.showSuccess(`Configuration for ${updatedConfig.displayName} was updated successfully!`);
+        const index = this.networkConfigs.findIndex(c => c.id === configId);
+        if (index > -1) {
+          this.networkConfigs[index] = updatedConfig;
+          this.networkForms[configId].patchValue(updatedConfig, {emitEvent: false});
+          this.toggleStaticIpValidators(this.networkForms[configId], updatedConfig.isDhcp);
+        }
+        form.markAsPristine();
+        form.enable();
+        this.toggleStaticIpValidators(form, updatedConfig.isDhcp); // Re-apply disabled state after enabling
       },
       error: (err) => {
-        this.notificationService.showError(`Failed to save configuration: ${err.message}`);
+        console.error('Failed to save network config', err);
+        this.notificationService.showError(`Error saving configuration: ${err.error?.details || err.message}`);
+        form.enable();
+        this.toggleStaticIpValidators(form, form.get('isDhcp')?.value);
       }
     });
-  }
-
-  // SỬA LỖI: Bổ sung các hàm còn thiếu
-  getPortById(id: string): any {
-    return this.ports.find(p => p.id === id);
-  }
-
-  editPort(port: any): void {
-    port.isEditing = true;
-    // Reset form về giá trị ban đầu khi bắt đầu sửa
-    this.editForms[port.id].reset(port);
-  }
-
-  cancelEdit(port: any): void {
-    port.isEditing = false;
-  }
-
-  // Hàm placeholder cho form 4G
-  saveApn(): void {
-    this.notificationService.showWarning("4G functionality is not yet implemented.");
   }
 }
