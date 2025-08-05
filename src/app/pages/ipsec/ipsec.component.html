@@ -1,134 +1,42 @@
-<div class="page-container">
-  <div class="page-header">
-    <h1>IPSec</h1>
-  </div>
-  <mat-tab-group animationDuration="0ms">
-    <mat-tab label="Global Settings">
-      <div class="tab-content">
-        <form [formGroup]="globalSettingsForm" class="global-settings-form">
-          <mat-form-field appearance="outline">
-            <mat-label>Status</mat-label>
-            <mat-select formControlName="status">
-              <mat-option value="Enabled">Enabled</mat-option>
-              <mat-option value="Disabled">Disabled</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>IPSec NAT-T</mat-label>
-            <mat-select formControlName="natT">
-              <mat-option value="Enabled">Enabled</mat-option>
-              <mat-option value="Disabled">Disabled</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>VPN Event Log</mat-label>
-            <mat-select formControlName="eventLog">
-              <mat-option value="Enabled">Enabled</mat-option>
-              <mat-option value="Disabled">Disabled</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Log Destination</mat-label>
-            <mat-select formControlName="logDestination">
-              <mat-option value="Local">Local Storage</mat-option>
-              <mat-option value="Syslog">Syslog</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <button mat-flat-button color="primary">APPLY</button>
-        </form>
-      </div>
-    </mat-tab>
+<div class="container">
+  <h1>IPsec Configuration</h1>
+  <p>Manage your VPN connections based on type.</p>
 
-    <mat-tab label="IPSec Settings">
-      <div class="tab-content">
-        <div class="table-toolbar">
-          <button mat-flat-button color="primary" (click)="openEditDialog()">
-            <mat-icon>add</mat-icon>
-            Create IPSec Connection
-          </button>
+  <mat-tab-group animationDuration="0ms" class="mat-elevation-z4">
+    <mat-tab label="Site-to-Site Connections">
+      <ng-template matTabContent>
+        <div class="connection-content">
+          <div class="actions">
+            <button mat-flat-button color="primary" (click)="addConnection('site-to-site')">
+              <mat-icon>add</mat-icon>
+              Add Site-to-Site Connection
+            </button>
+          </div>
+          <app-ipsec-connection-list
+            [connections]="siteToSiteConnections"
+            (edit)="editConnection($event)"
+            (delete)="deleteConnection($event)">
+          </app-ipsec-connection-list>
         </div>
-        <table mat-table [dataSource]="ipsecSettingsDataSource" class="mat-elevation-z2">
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let e">
-              <mat-icon [style.color]="e.status ? 'green' : 'gray'">{{ e.status ? 'toggle_on' : 'toggle_off' }}
-              </mat-icon>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
-            <td mat-cell *matCellDef="let e">{{ e.name }}</td>
-          </ng-container>
-          <ng-container matColumnDef="remoteGateway">
-            <th mat-header-cell *matHeaderCellDef>Remote VPN Gateway</th>
-            <td mat-cell *matCellDef="let e">{{ e.remoteGateway }}</td>
-          </ng-container>
-          <ng-container matColumnDef="localNetwork">
-            <th mat-header-cell *matHeaderCellDef>Local Network</th>
-            <td mat-cell *matCellDef="let e">{{ e.localNetwork }}</td>
-          </ng-container>
-          <ng-container matColumnDef="remoteNetwork">
-            <th mat-header-cell *matHeaderCellDef>Remote Network</th>
-            <td mat-cell *matCellDef="let e">{{ e.remoteNetwork }}</td>
-          </ng-container>
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let e">
-              <button mat-icon-button color="primary" (click)="openEditDialog(e)">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button color="warn" (click)="deleteItem(e.id)">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="ipsecSettingsDisplayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: ipsecSettingsDisplayedColumns;"></tr>
-        </table>
-      </div>
+      </ng-template>
     </mat-tab>
 
-    <mat-tab label="IPSec Status">
-      <div class="tab-content">
-        <table mat-table [dataSource]="ipsecStatusDataSource" class="mat-elevation-z2">
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
-            <td mat-cell *matCellDef="let e">{{ e.name }}</td>
-          </ng-container>
-          <ng-container matColumnDef="localNetwork">
-            <th mat-header-cell *matHeaderCellDef>Local Network</th>
-            <td mat-cell *matCellDef="let e">{{ e.localNetwork }}</td>
-          </ng-container>
-          <ng-container matColumnDef="localGateway">
-            <th mat-header-cell *matHeaderCellDef>Local Gateway</th>
-            <td mat-cell *matCellDef="let e">{{ e.localGateway }}</td>
-          </ng-container>
-          <ng-container matColumnDef="remoteNetwork">
-            <th mat-header-cell *matHeaderCellDef>Remote Network</th>
-            <td mat-cell *matCellDef="let e">{{ e.remoteNetwork }}</td>
-          </ng-container>
-          <ng-container matColumnDef="remoteGateway">
-            <th mat-header-cell *matHeaderCellDef>Remote Gateway</th>
-            <td mat-cell *matCellDef="let e">{{ e.remoteGateway }}</td>
-          </ng-container>
-          <ng-container matColumnDef="keyExchange">
-            <th mat-header-cell *matHeaderCellDef>Key Exchange (P1)</th>
-            <td mat-cell *matCellDef="let e">{{ e.keyExchange }}</td>
-          </ng-container>
-          <ng-container matColumnDef="dataExchange">
-            <th mat-header-cell *matHeaderCellDef>Data Exchange (P2)</th>
-            <td mat-cell *matCellDef="let e">{{ e.dataExchange }}</td>
-          </ng-container>
-          <ng-container matColumnDef="time">
-            <th mat-header-cell *matHeaderCellDef>Time</th>
-            <td mat-cell *matCellDef="let e">{{ e.time }}</td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="ipsecStatusDisplayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: ipsecStatusDisplayedColumns;"></tr>
-        </table>
-      </div>
+    <mat-tab label="Remote Access Connections">
+      <ng-template matTabContent>
+        <div class="connection-content">
+          <div class="actions">
+            <button mat-flat-button color="primary" (click)="addConnection('remote-access')">
+              <mat-icon>add</mat-icon>
+              Add Remote Access Connection
+            </button>
+          </div>
+          <app-ipsec-connection-list
+            [connections]="remoteAccessConnections"
+            (edit)="editConnection($event)"
+            (delete)="deleteConnection($event)">
+          </app-ipsec-connection-list>
+        </div>
+      </ng-template>
     </mat-tab>
   </mat-tab-group>
 </div>

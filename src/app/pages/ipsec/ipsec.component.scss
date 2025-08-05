@@ -1,59 +1,11 @@
-$primary-color: #012596;
-$border-color: #e9eef2;
-$label-color: #6c757d;
+.container {
+  padding: 24px;
+}
 
-.page-container {
+.connection-content {
   padding: 16px;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-
-  h1 {
-    font-size: 24px;
-    font-weight: 600;
-    color: $primary-color;
-    margin-bottom: 24px;
-  }
-}
-
-.tab-content {
-  padding: 24px 0;
-}
-
-.global-settings-form {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  max-width: 800px;
-
-  button {
-    margin-top: 10px;
-  }
-}
-
-.table-toolbar {
+.actions {
   margin-bottom: 16px;
-}
-
-table {
-  width: 100%;
-}
-
-// --- Style responsive mới cho tabs ---
-::ng-deep {
-  @media (max-width: 768px) {
-    // Ẩn 2 nút mũi tên < >
-    .mat-mdc-tab-header-pagination {
-      display: none !important;
-    }
-
-    // Cho phép cuộn ngang bằng cách vuốt tay
-    .mat-mdc-tab-label-container {
-      overflow-x: auto !important;
-    }
-  }
 }

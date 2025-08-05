@@ -1,0 +1,30 @@
+.list-container {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.full-width-table {
+  width: 100%;
+}
+
+.no-connections {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.mat-mdc-chip {
+  font-size: 12px;
+  padding: 4px 8px !important;
+  min-height: 24px !important;
+}
+
+.chip-green {
+  background-color: #4CAF50 !important;
+  color: white !important;
+}
+
+.chip-gray {
+  background-color: #9E9E9E !important;
+  color: white !important;
+}

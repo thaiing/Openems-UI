@@ -1,45 +1,87 @@
-fieldset {
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  padding: 16px;
-  margin-bottom: 24px;
-
-  legend {
-    padding: 0 8px;
-    font-weight: 500;
-  }
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-}
-
-.settings-type, .security-type {
-  margin-bottom: 24px;
-
-  mat-radio-button {
-    margin-right: 24px;
-  }
-}
-
-.network-row {
+// Container chính cho form, sử dụng Flexbox để tạo 2 cột
+.form-container {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 8px;
+  flex-direction: row;
+  gap: 32px; // Tăng khoảng cách giữa 2 cột
 
-  .network-ip {
-    flex-grow: 1;
-  }
-
-  .network-mask {
-    width: 150px;
+  // Khi màn hình nhỏ hơn 768px, chuyển thành 1 cột
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 0;
   }
 }
 
-mat-dialog-content {
-  padding-top: 20px;
+// Style cho mỗi cột
+.form-column {
+  flex: 1; // Chia đều không gian
+  min-width: 0; // Ngăn chặn flex item tràn ra ngoài
 }
 
+// Áp dụng cho tất cả các MatFormField để có khoảng cách
+.full-width {
+  width: 100%;
+  margin-top: 10px;
+}
+
+// Style cho các tiêu đề của từng mục (e.g., Local Certificate)
+.form-section-title {
+  margin-top: 18px;
+  margin-bottom: 12px;
+  font-weight: 500;
+  font-size: 1em;
+  color: #3f51b5; // Màu primary của Angular Material
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
+
+  // Không cần margin top cho tiêu đề đầu tiên trong mỗi cột
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+// Nhóm các checkbox lại với nhau
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  margin: 10px 0;
+  gap: 8px;
+}
+
+// Căn chỉnh cho khu vực nút upload
+.upload-section {
+  margin-top: -10px; // Giảm khoảng cách với trường bên trên
+  margin-bottom: 20px;
+}
+
+// Thêm khoảng cách cho đường kẻ ngang
+mat-divider {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+// Căn chỉnh các nút ở cuối mỗi bước trong stepper
+.step-actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+// ===================================================
+// SỬA LỖI: Style riêng cho Step 1 (Type & Method)
+// ===================================================
+// Target form bên trong mat-step đầu tiên
+mat-step:first-child form {
+  padding: 16px 20px; // Thêm padding
+  max-width: 500px; // Giới hạn chiều rộng để không bị quá rộng
+  min-height: 150px; // Thêm chiều cao tối thiểu để không bị cắt
+  margin: 0 auto; // Căn giữa
+  display: flex;
+  flex-direction: column;
+  justify-content: center; // Căn các trường vào giữa theo chiều dọc
+}
+
+// Giúp nội dung dialog không bị tràn khi cửa sổ nhỏ
+::ng-deep .mat-dialog-content {
+  max-height: 75vh;
+}

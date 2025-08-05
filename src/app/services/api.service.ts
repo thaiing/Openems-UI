@@ -269,4 +269,30 @@ export class ApiService {
     const url = `${this.networkApiUrl}/api/network-config/${ifaceName}`;
     return this.http.post<NetworkConfig>(url, config);
   }
+
+  getIpsecConnections(): Observable<any[]> {
+    // Thay thế URL bằng địa chỉ API thật của bạn
+    return this.http.get<any[]>('http://192.168.4.93:5001/api/connections');
+  }
+
+  createIpsecConnection(connection: any): Observable<any> {
+    return this.http.post<any>('http://192.168.4.93:5001/api/connections', connection);
+  }
+
+  updateIpsecConnection(connId: string, connection: any): Observable<any> {
+    return this.http.put<any>(`http://192.168.4.93:5001/api/connections/${connId}`, connection);
+  }
+
+  deleteIpsecConnection(connId: string): Observable<any> {
+    return this.http.delete<any>(`http://192.168.4.93:5001/api/connections/${connId}`);
+  }
+
+  getCertificates(): Observable<any[]> {
+    return this.http.get<any[]>('http://192.168.4.93:5001/api/certificates');
+  }
+
+  uploadCertificate(formData: FormData): Observable<any> {
+    // API endpoint này phải khớp với endpoint trong file Python của bạn
+    return this.http.post<any>('http://192.168.4.93:5001/api/certificates/upload', formData);
+  }
 }

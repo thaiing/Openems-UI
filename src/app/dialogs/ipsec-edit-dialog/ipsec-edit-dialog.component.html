@@ -1,117 +1,208 @@
-<h2 mat-dialog-title>{{ isEditMode ? 'Edit' : 'Create' }} IPSec Connection</h2>
-<mat-dialog-content>
-  <form [formGroup]="form">
-    <mat-radio-group formControlName="settingsType" class="settings-type">
-      <mat-radio-button value="Quick">Quick Settings</mat-radio-button>
-      <mat-radio-button value="Advanced">Advanced Settings</mat-radio-button>
-    </mat-radio-group>
+<h1 mat-dialog-title>{{ isEditMode ? 'Edit' : 'Add' }} Connection</h1>
 
-    <fieldset>
-      <legend>Tunnel Settings</legend>
-      <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Status</mat-label>
-          <mat-select formControlName="status">
-            <mat-option [value]="true">Enabled</mat-option>
-            <mat-option [value]="false">Disabled</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Name *</mat-label>
-          <input matInput formControlName="name"></mat-form-field>
+<mat-dialog-content class="mat-typography">
+  <mat-stepper linear #stepper>
+    <!-- Step 1: Selection -->
+    <mat-step [stepControl]="selectionFormGroup">
+      <form [formGroup]="selectionFormGroup">
+        <ng-template matStepLabel>Type & Method</ng-template>
 
-        <mat-form-field appearance="outline" *ngIf="form.get('settingsType')?.value === 'Advanced'">
-          <mat-label>L2TP Tunnel *</mat-label>
-          <mat-select formControlName="l2tpTunnel">
-            <mat-option value="Disabled">Disabled</mat-option>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Connection Category</mat-label>
+          <mat-select formControlName="category" required>
+            <mat-option value="site-to-site">Site-to-Site</mat-option>
+            <mat-option value="remote-access">Remote Access</mat-option>
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field appearance="outline">
-          <mat-label>VPN Connection *</mat-label>
-          <mat-select formControlName="vpnConnection">
-            <mat-option value="Site to Site">Site to Site</mat-option>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Authentication Method</mat-label>
+          <mat-select formControlName="auth_method" required>
+            <ng-container *ngIf="selectionFormGroup.value.category === 'site-to-site'">
+              <mat-option value="ikev2-cert">IKEv2 Certificate</mat-option>
+              <mat-option value="ikev2-psk">IKEv2 Pre-Shared Key</mat-option>
+            </ng-container>
+            <!-- Thêm các option cho remote access ở đây -->
           </mat-select>
         </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Remote VPN Gateway *</mat-label>
-          <input matInput formControlName="remoteGateway"></mat-form-field>
 
-        <mat-form-field appearance="outline" *ngIf="form.get('settingsType')?.value === 'Advanced'">
-          <mat-label>Startup Mode *</mat-label>
-          <mat-select formControlName="startupMode">
-            <mat-option value="Initiate Automatically">Initiate Automatically</mat-option>
-          </mat-select>
+        <div class="step-actions">
+          <button mat-flat-button color="primary" matStepperNext [disabled]="selectionFormGroup.invalid">Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 2: Configuration -->
+    <mat-step [stepControl]="detailsFormGroup">
+      <form [formGroup]="detailsFormGroup">
+        <ng-template matStepLabel>Configuration</ng-template>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Connection Name</mat-label>
+          <input matInput formControlName="name" required>
         </mat-form-field>
-      </div>
-    </fieldset>
 
-    <fieldset formArrayName="localNetworkList" *ngIf="form.get('settingsType')?.value === 'Advanced'">
-      <legend>Local Network List
-        <button type="button" mat-icon-button (click)="addNetwork('local')">
-          <mat-icon>add_circle</mat-icon>
-        </button>
-      </legend>
-      <div *ngFor="let group of localNetworkList.controls; let i=index" [formGroupName]="i" class="network-row">
-        <mat-checkbox formControlName="enabled"></mat-checkbox>
-        <mat-form-field appearance="outline" class="network-ip">
-          <mat-label>Local Network *</mat-label>
-          <input matInput formControlName="network"></mat-form-field>
-        <mat-form-field appearance="outline" class="network-mask">
-          <mat-label>Netmask *</mat-label>
-          <input matInput formControlName="netmask"></mat-form-field>
-        <button type="button" mat-icon-button color="warn" (click)="removeNetwork('local', i)"
-                *ngIf="localNetworkList.length > 1">
-          <mat-icon>remove_circle</mat-icon>
-        </button>
-      </div>
-    </fieldset>
+        <div [ngSwitch]="selectionFormGroup.value.auth_method">
 
-    <fieldset formArrayName="remoteNetworkList">
-      <legend>Remote Network List
-        <button type="button" mat-icon-button (click)="addNetwork('remote')">
-          <mat-icon>add_circle</mat-icon>
-        </button>
-      </legend>
-      <div *ngFor="let group of remoteNetworkList.controls; let i=index" [formGroupName]="i" class="network-row">
-        <mat-checkbox formControlName="enabled"></mat-checkbox>
-        <mat-form-field appearance="outline" class="network-ip">
-          <mat-label>Remote Network *</mat-label>
-          <input matInput formControlName="network"></mat-form-field>
-        <mat-form-field appearance="outline" class="network-mask">
-          <mat-label>Netmask *</mat-label>
-          <input matInput formControlName="netmask"></mat-form-field>
-        <button type="button" mat-icon-button color="warn" (click)="removeNetwork('remote', i)"
-                *ngIf="remoteNetworkList.length > 1">
-          <mat-icon>remove_circle</mat-icon>
-        </button>
-      </div>
-    </fieldset>
+          <!-- =================================================== -->
+          <!-- CASE: Site-to-Site - IKEv2 Certificate -->
+          <!-- =================================================== -->
+          <div *ngSwitchCase="'ikev2-cert'">
+            <div class="form-container">
+              <!-- Cột trái -->
+              <div class="form-column">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>IKE Version</mat-label>
+                  <mat-select formControlName="ike_version">
+                    <mat-option value="any">Any IKE version</mat-option>
+                    <mat-option value="ikev1">IKEv1</mat-option>
+                    <mat-option value="ikev2">IKEv2</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Server Address</mat-label>
+                  <input matInput formControlName="server_address" placeholder="Local public IP or hostname">
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Remote Address</mat-label>
+                  <input matInput formControlName="remote_address" required placeholder="Remote peer IP or hostname">
+                </mat-form-field>
 
-    <fieldset *ngIf="form.get('settingsType')?.value === 'Quick'">
-      <legend>Security Settings</legend>
-      <mat-radio-group formControlName="securityType" class="security-type">
-        <mat-radio-button value="Simple">Simple</mat-radio-button>
-        <mat-radio-button value="Standard">Standard</mat-radio-button>
-        <mat-radio-button value="Strong">Strong</mat-radio-button>
-        <mat-radio-button value="Extra">Extra</mat-radio-button>
-      </mat-radio-group>
-      <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Authentication Mode *</mat-label>
-          <mat-select formControlName="authMode">
-            <mat-option value="Pre-shared Key">Pre-shared Key</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Pre-shared Key *</mat-label>
-          <input matInput formControlName="preSharedKey" type="password">
-        </mat-form-field>
-      </div>
-    </fieldset>
-  </form>
+                <mat-divider></mat-divider>
+
+                <div class="checkbox-group">
+                  <mat-checkbox formControlName="send_certificate_request">Send certificate request</mat-checkbox>
+                  <mat-checkbox formControlName="active_initiator">Initiate connection</mat-checkbox>
+                </div>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Start Action</mat-label>
+                  <mat-select formControlName="start_action">
+                    <mat-option value="none">None</mat-option>
+                    <mat-option value="start">Start</mat-option>
+                    <mat-option value="trap">Trap</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-divider></mat-divider>
+
+                <h3 class="form-section-title">Local Certificate</h3>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Server certificate</mat-label>
+                  <mat-select formControlName="server_certificate_name" required>
+                    <mat-option *ngFor="let cert of certificates" [value]="cert.name">{{ cert.name }}</mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="detailsFormGroup.get('server_certificate_name')?.hasError('requireKeyType')">
+                    Must be a certificate with a private key.
+                  </mat-error>
+                </mat-form-field>
+                <div class="upload-section">
+                  <button type="button" mat-stroked-button (click)="fileInput.click()">
+                    <mat-icon>upload_file</mat-icon>
+                    Upload new certificate
+                  </button>
+                  <input hidden (change)="onFileSelected($event)" #fileInput type="file"/>
+                </div>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Identity</mat-label>
+                  <mat-select formControlName="local_identity">
+                    <mat-option *ngFor="let id of selectedLocalCertIdentities" [value]="id">{{ id }}</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <!-- Cột phải -->
+              <div class="form-column">
+
+
+                <h3 class="form-section-title">Remote Certificate & Peer</h3>
+                <mat-checkbox formControlName="auto_ca_select">Choose a CA certificate automatically</mat-checkbox>
+                <ng-container *ngIf="!detailsFormGroup.value.auto_ca_select">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>CA/Peer certificate</mat-label>
+                    <mat-select formControlName="ca_certificate_name">
+                      <mat-option *ngFor="let cert of certificates" [value]="cert.name">{{ cert.name }}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </ng-container>
+                <mat-checkbox formControlName="use_server_value">Use server value for Peer Identity</mat-checkbox>
+                <mat-form-field *ngIf="!detailsFormGroup.value.use_server_value" appearance="outline"
+                                class="full-width">
+                  <mat-label>Custom Peer Identity</mat-label>
+                  <input matInput formControlName="peer_identity">
+                </mat-form-field>
+
+                <mat-divider></mat-divider>
+
+                <h3 class="form-section-title">Traffic Selectors</h3>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Local traffic selector</mat-label>
+                  <input matInput formControlName="local_traffic_selector">
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Remote traffic selector</mat-label>
+                  <input matInput formControlName="remote_traffic_selector">
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+
+          <!-- =================================================== -->
+          <!-- CASE: Site-to-Site - IKEv2 Pre-Shared Key -->
+          <!-- =================================================== -->
+          <div *ngSwitchCase="'ikev2-psk'">
+            <div class="form-container">
+              <div class="form-column">
+                <h3 class="form-section-title">Connection Details</h3>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Remote Address</mat-label>
+                  <input matInput formControlName="remote_address" required>
+                </mat-form-field>
+
+                <h3 class="form-section-title">Authentication</h3>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Local Identifier</mat-label>
+                  <input matInput formControlName="local_identity" required>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Remote Identifier</mat-label>
+                  <input matInput formControlName="remote_identity" required>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Pre-Shared Key</mat-label>
+                  <input matInput formControlName="pre_shared_key" type="password" [required]="!isEditMode">
+                  <mat-hint *ngIf="isEditMode">Leave blank to keep the existing key.</mat-hint>
+                </mat-form-field>
+              </div>
+              <div class="form-column">
+                <h3 class="form-section-title">Traffic Selectors</h3>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Local Subnet</mat-label>
+                  <input matInput formControlName="local_traffic_selector" placeholder="e.g., 192.168.1.0/24">
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Remote Subnet</mat-label>
+                  <input matInput formControlName="remote_traffic_selector" placeholder="e.g., 10.0.0.0/8">
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+
+          <div *ngSwitchDefault>
+            <p>Please go back and select an authentication method to continue.</p>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button mat-button matStepperPrevious>Back</button>
+        </div>
+      </form>
+    </mat-step>
+  </mat-stepper>
 </mat-dialog-content>
+
 <mat-dialog-actions align="end">
-  <button mat-stroked-button (click)="onCancel()">CANCEL</button>
-  <button mat-flat-button color="primary" (click)="onSave()">{{ isEditMode ? 'APPLY' : 'CREATE' }}</button>
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-flat-button color="accent" (click)="save(false)">Save</button>
+  <button mat-flat-button color="primary" [disabled]="selectionFormGroup.invalid || detailsFormGroup.invalid"
+          (click)="save(true)">Save and update
+  </button>
 </mat-dialog-actions>
