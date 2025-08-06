@@ -21,7 +21,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {ApiService} from '../../services/api.service';
 import {NotificationService} from '../../services/notification.service';
 
-// Custom Validator: Kiểm tra xem certificate được chọn có phải là loại 'key' không
+// Custom Validator: Giữ nguyên của bạn
 export function requireKeyTypeValidator(getCertificates: () => any[]): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const selectedCertName = control.value;
@@ -63,19 +63,21 @@ export class IpsecEditDialogComponent implements OnInit {
   ngOnInit(): void {
     this.apiService.getCertificates().subscribe(certs => this.certificates = certs);
 
-    // Form 1: Lựa chọn
     this.selectionFormGroup = this._formBuilder.group({
       category: [{value: this.data?.category || 'site-to-site', disabled: this.isEditMode}, Validators.required],
       auth_method: [this.data?.auth_method || '', Validators.required]
     });
 
-    // Form 2: Chi tiết - Khởi tạo với các trường có thể có
+    // Form 2: Chi tiết - Đã loại bỏ các trường không cần thiết
     this.detailsFormGroup = this._formBuilder.group({
+      // === Trường chung ===
       name: [this.data?.name || '', Validators.required],
+      comments: [this.data?.comments || ''],
+
+      // === Trường cho IKEv2 Certificate (Giữ nguyên từ file của bạn) ===
       remote_address: [this.data?.remote_address || ''],
       local_traffic_selector: [this.data?.local_traffic_selector || ''],
       remote_traffic_selector: [this.data?.remote_traffic_selector || ''],
-      ike_version: [this.data?.ike_version || 'any'],
       server_address: [this.data?.server_address || ''],
       send_certificate_request: [this.data?.send_certificate_request ?? true],
       active_initiator: [this.data?.active_initiator ?? false],
@@ -87,43 +89,58 @@ export class IpsecEditDialogComponent implements OnInit {
       use_server_value: [this.data?.use_server_value ?? false],
       peer_identity: [this.data?.peer_identity || ''],
       remote_identity: [this.data?.remote_identity || ''],
-      pre_shared_key: [''],
+
+      // === Trường cho IKEv2 PSK (Đã đơn giản hóa) ===
+      remote_gateway_ip: [this.data?.remote_gateway_ip || ''],
+      pre_shared_key: [this.data?.pre_shared_key || ''],
+      ike_version: [this.data?.ike_version || '2'],
+      p1_encryption: [this.data?.p1_encryption || 'aes128'],
+      p1_authentication: [this.data?.p1_authentication || 'sha256'],
+      p1_dh_group: [this.data?.p1_dh_group || '14'],
+      p1_key_lifetime: [this.data?.p1_key_lifetime || 86400],
+      p1_local_id: [this.data?.p1_local_id || ''],
+      p2_local_address: [this.data?.p2_local_address || ''],
+      p2_remote_address: [this.data?.p2_remote_address || ''],
     });
 
-    // Lắng nghe sự thay đổi để cập nhật validators
     this.selectionFormGroup.get('auth_method')?.valueChanges.subscribe(method => {
       if (method) this.updateValidators(method);
     });
 
-    // Cập nhật validators nếu là chế độ edit
     if (this.isEditMode) {
       this.updateValidators(this.data.auth_method);
     }
   }
 
   updateValidators(method: string): void {
-    // Trước tiên, xóa hết validators của các trường không chung
-    const fieldsToClear = ['remote_address', 'local_traffic_selector', 'remote_traffic_selector', 'ike_version', 'server_address', 'start_action', 'server_certificate_name', 'local_identity', 'remote_identity', 'pre_shared_key'];
-    fieldsToClear.forEach(field => {
-      this.detailsFormGroup.get(field)?.clearValidators();
+    const allFields = Object.keys(this.detailsFormGroup.controls);
+    allFields.forEach(field => {
+      if (field !== 'name') {
+        this.detailsFormGroup.get(field)?.clearValidators();
+      }
     });
 
-    // Thêm validators dựa trên method được chọn
     switch (method) {
       case 'ikev2-cert':
         this.detailsFormGroup.get('remote_address')?.setValidators([Validators.required]);
         this.detailsFormGroup.get('server_certificate_name')?.setValidators([Validators.required, requireKeyTypeValidator(() => this.certificates)]);
         break;
       case 'ikev2-psk':
-        this.detailsFormGroup.get('remote_address')?.setValidators([Validators.required]);
-        this.detailsFormGroup.get('local_identity')?.setValidators([Validators.required]);
-        this.detailsFormGroup.get('remote_identity')?.setValidators([Validators.required]);
+        this.detailsFormGroup.get('remote_gateway_ip')?.setValidators([Validators.required]);
+        this.detailsFormGroup.get('ike_version')?.setValidators([Validators.required]);
+        this.detailsFormGroup.get('p1_encryption')?.setValidators([Validators.required]);
+        this.detailsFormGroup.get('p1_authentication')?.setValidators([Validators.required]);
+        this.detailsFormGroup.get('p1_dh_group')?.setValidators([Validators.required]);
+        this.detailsFormGroup.get('p1_key_lifetime')?.setValidators([Validators.required, Validators.min(60)]);
+        this.detailsFormGroup.get('p1_local_id')?.setValidators([Validators.required]);
+        this.detailsFormGroup.get('p2_local_address')?.setValidators([Validators.required]);
+        this.detailsFormGroup.get('p2_remote_address')?.setValidators([Validators.required]);
+
         if (!this.isEditMode) {
           this.detailsFormGroup.get('pre_shared_key')?.setValidators([Validators.required]);
         }
         break;
     }
-    // Cập nhật lại trạng thái của tất cả các trường
     this.detailsFormGroup.updateValueAndValidity();
   }
 
@@ -176,7 +193,7 @@ export class IpsecEditDialogComponent implements OnInit {
         this.notificationService.showSuccess(res.message);
         this.dialogRef.close(true);
       },
-      error: (err) => this.notificationService.showError('Failed to save connection.')
+      error: (err) => this.notificationService.showError(`Failed to save connection: ${err.error?.error || 'Unknown error'}`)
     });
   }
 }
