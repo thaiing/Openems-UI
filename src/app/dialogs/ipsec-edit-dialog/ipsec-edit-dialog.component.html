@@ -2,7 +2,7 @@
 
 <mat-dialog-content class="mat-typography">
   <mat-stepper linear #stepper>
-    <!-- Step 1: Selection - Giữ nguyên của bạn -->
+    <!-- Step 1: Selection -->
     <mat-step [stepControl]="selectionFormGroup">
       <form [formGroup]="selectionFormGroup">
         <ng-template matStepLabel>Type & Method</ng-template>
@@ -16,10 +16,8 @@
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Authentication Method</mat-label>
           <mat-select formControlName="auth_method" required>
-            <ng-container *ngIf="selectionFormGroup.value.category === 'site-to-site'">
-              <mat-option value="ikev2-cert">IKEv2 Certificate</mat-option>
-              <mat-option value="ikev2-psk">IKEv2 Pre-Shared Key</mat-option>
-            </ng-container>
+            <mat-option value="ikev2-cert">IKEv2 Certificate</mat-option>
+            <mat-option value="ikev2-psk">IKEv2 Pre-Shared Key</mat-option>
           </mat-select>
         </mat-form-field>
         <div class="step-actions">
@@ -33,208 +31,354 @@
       <form [formGroup]="detailsFormGroup">
         <ng-template matStepLabel>Configuration</ng-template>
 
-        <div [ngSwitch]="selectionFormGroup.value.auth_method">
+        <!-- Sử dụng ngSwitch lồng nhau để hiển thị form chính xác -->
+        <div [ngSwitch]="selectionFormGroup.value.category">
 
-          <!-- =================================================== -->
-          <!-- CASE: Site-to-Site - IKEv2 Certificate (GIỮ NGUYÊN) -->
-          <!-- =================================================== -->
-          <div *ngSwitchCase="'ikev2-cert'">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Connection Name</mat-label>
-              <input matInput formControlName="name" required>
-            </mat-form-field>
-            <div class="form-container">
-              <!-- Cột trái -->
-              <div class="form-column">
+          <!-- ======================== -->
+          <!-- CATEGORY: SITE-TO-SITE   -->
+          <!-- ======================== -->
+          <ng-container *ngSwitchCase="'site-to-site'">
+            <div [ngSwitch]="selectionFormGroup.value.auth_method">
+
+              <!-- === FORM 1: Site-to-Site / IKEv2 Certificate === -->
+              <div *ngSwitchCase="'ikev2-cert'">
                 <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>IKE Version</mat-label>
-                  <mat-select formControlName="ike_version">
-                    <mat-option value="any">Any IKE version</mat-option>
-                    <mat-option value="ikev1">IKEv1</mat-option>
-                    <mat-option value="ikev2">IKEv2</mat-option>
-                  </mat-select>
+                  <mat-label>Connection Name</mat-label>
+                  <input matInput formControlName="name" required>
                 </mat-form-field>
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Server Address</mat-label>
-                  <input matInput formControlName="server_address" placeholder="Local public IP or hostname">
-                </mat-form-field>
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Remote Address</mat-label>
-                  <input matInput formControlName="remote_address" required placeholder="Remote peer IP or hostname">
-                </mat-form-field>
-                <mat-divider></mat-divider>
-                <div class="checkbox-group">
-                  <mat-checkbox formControlName="send_certificate_request">Send certificate request</mat-checkbox>
-                  <mat-checkbox formControlName="active_initiator">Initiate connection</mat-checkbox>
+                <div class="form-container">
+                  <div class="form-column">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>IKE Version</mat-label>
+                      <mat-select formControlName="ike_version">
+                        <mat-option value="any">Any IKE version</mat-option>
+                        <mat-option value="ikev1">IKEv1</mat-option>
+                        <mat-option value="ikev2">IKEv2</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Server Address</mat-label>
+                      <input matInput formControlName="server_address" placeholder="Local public IP or hostname">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Remote Address</mat-label>
+                      <input matInput formControlName="remote_address" required
+                             placeholder="Remote peer IP or hostname">
+                    </mat-form-field>
+                    <mat-divider></mat-divider>
+                    <div class="checkbox-group">
+                      <mat-checkbox formControlName="send_certificate_request">Send certificate request</mat-checkbox>
+                      <mat-checkbox formControlName="active_initiator">Initiate connection</mat-checkbox>
+                    </div>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Start Action</mat-label>
+                      <mat-select formControlName="start_action">
+                        <mat-option value="none">None</mat-option>
+                        <mat-option value="start">Start</mat-option>
+                        <mat-option value="trap">Trap</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <mat-divider></mat-divider>
+                    <h3 class="form-section-title">Local Certificate</h3>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Server certificate</mat-label>
+                      <mat-select formControlName="server_certificate_name" required>
+                        <mat-option *ngFor="let cert of serverCertificates" [value]="cert.name">{{ cert.name }}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="detailsFormGroup.get('server_certificate_name')?.hasError('requireKeyType')">
+                        Must be a certificate with a private key.
+                      </mat-error>
+                    </mat-form-field>
+                    <div class="upload-section">
+                      <button type="button" mat-stroked-button (click)="localFileInput.click()">
+                        <mat-icon>upload_file</mat-icon>
+                        Upload new certificate
+                      </button>
+                      <input hidden (change)="onFileSelected($event, 'server_certificate_name')" #localFileInput
+                             type="file"/>
+                    </div>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Identity</mat-label>
+                      <mat-select formControlName="local_identity">
+                        <mat-option *ngFor="let id of selectedLocalCertIdentities" [value]="id">{{ id }}</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <div class="form-column">
+                    <h3 class="form-section-title">Remote Certificate & Peer</h3>
+                    <mat-checkbox formControlName="auto_ca_select">Choose a CA certificate automatically</mat-checkbox>
+                    <ng-container *ngIf="!detailsFormGroup.value.auto_ca_select">
+                      <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>CA/Peer certificate</mat-label>
+                        <mat-select formControlName="ca_certificate_name">
+                          <mat-option *ngFor="let cert of caCertificates" [value]="cert.name">{{ cert.name }}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                      <!-- (MỚI) Nút upload cho CA/Peer -->
+                      <div class="upload-section">
+                        <button type="button" mat-stroked-button (click)="caFileInput.click()">
+                          <mat-icon>upload_file</mat-icon>
+                          Upload new CA/Peer cert
+                        </button>
+                        <input hidden (change)="onFileSelected($event, 'ca_certificate_name')" #caFileInput
+                               type="file"/>
+                      </div>
+                    </ng-container>
+                    <mat-checkbox formControlName="use_server_value">Use server value for Peer Identity</mat-checkbox>
+                    <mat-form-field *ngIf="!detailsFormGroup.value.use_server_value" appearance="outline"
+                                    class="full-width">
+                      <mat-label>Custom Peer Identity</mat-label>
+                      <input matInput formControlName="peer_identity">
+                    </mat-form-field>
+                    <mat-divider></mat-divider>
+                    <h3 class="form-section-title">Traffic Selectors</h3>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Local traffic selector</mat-label>
+                      <input matInput formControlName="local_traffic_selector">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Remote traffic selector</mat-label>
+                      <input matInput formControlName="remote_traffic_selector">
+                    </mat-form-field>
+                  </div>
                 </div>
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Start Action</mat-label>
-                  <mat-select formControlName="start_action">
-                    <mat-option value="none">None</mat-option>
-                    <mat-option value="start">Start</mat-option>
-                    <mat-option value="trap">Trap</mat-option>
-                  </mat-select>
-                </mat-form-field>
-                <mat-divider></mat-divider>
-                <h3 class="form-section-title">Local Certificate</h3>
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Server certificate</mat-label>
-                  <mat-select formControlName="server_certificate_name" required>
-                    <mat-option *ngFor="let cert of certificates" [value]="cert.name">{{ cert.name }}</mat-option>
-                  </mat-select>
-                  <mat-error *ngIf="detailsFormGroup.get('server_certificate_name')?.hasError('requireKeyType')">
-                    Must be a certificate with a private key.
-                  </mat-error>
-                </mat-form-field>
-                <div class="upload-section">
-                  <button type="button" mat-stroked-button (click)="fileInput.click()">
-                    <mat-icon>upload_file</mat-icon>
-                    Upload new certificate
-                  </button>
-                  <input hidden (change)="onFileSelected($event)" #fileInput type="file"/>
-                </div>
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Identity</mat-label>
-                  <mat-select formControlName="local_identity">
-                    <mat-option *ngFor="let id of selectedLocalCertIdentities" [value]="id">{{ id }}</mat-option>
-                  </mat-select>
-                </mat-form-field>
               </div>
-              <!-- Cột phải -->
-              <div class="form-column">
-                <h3 class="form-section-title">Remote Certificate & Peer</h3>
-                <mat-checkbox formControlName="auto_ca_select">Choose a CA certificate automatically</mat-checkbox>
-                <ng-container *ngIf="!detailsFormGroup.value.auto_ca_select">
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>CA/Peer certificate</mat-label>
-                    <mat-select formControlName="ca_certificate_name">
-                      <mat-option *ngFor="let cert of certificates" [value]="cert.name">{{ cert.name }}</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                </ng-container>
-                <mat-checkbox formControlName="use_server_value">Use server value for Peer Identity</mat-checkbox>
-                <mat-form-field *ngIf="!detailsFormGroup.value.use_server_value" appearance="outline"
-                                class="full-width">
-                  <mat-label>Custom Peer Identity</mat-label>
-                  <input matInput formControlName="peer_identity">
-                </mat-form-field>
-                <mat-divider></mat-divider>
-                <h3 class="form-section-title">Traffic Selectors</h3>
+
+              <!-- === FORM 2: Site-to-Site / IKEv2 Pre-Shared Key === -->
+              <div *ngSwitchCase="'ikev2-psk'">
                 <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Local traffic selector</mat-label>
-                  <input matInput formControlName="local_traffic_selector">
+                  <mat-label>Name</mat-label>
+                  <input matInput formControlName="name" required>
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Remote traffic selector</mat-label>
-                  <input matInput formControlName="remote_traffic_selector">
+                  <mat-label>Comments</mat-label>
+                  <textarea matInput formControlName="comments"></textarea>
                 </mat-form-field>
+                <div class="form-container">
+                  <div class="form-column">
+                    <h3 class="form-section-title">Network</h3>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Remote Gateway IP Address</mat-label>
+                      <input matInput formControlName="remote_gateway_ip" required>
+                    </mat-form-field>
+                    <h3 class="form-section-title">Phase 1 Proposal</h3>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Encryption</mat-label>
+                      <mat-select formControlName="p1_encryption" required>
+                        <mat-option value="aes128">AES-128</mat-option>
+                        <mat-option value="aes192">AES-192</mat-option>
+                        <mat-option value="aes256">AES-256</mat-option>
+                        <mat-option value="3des">3DES</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Authentication</mat-label>
+                      <mat-select formControlName="p1_authentication" required>
+                        <mat-option value="sha1">SHA1</mat-option>
+                        <mat-option value="sha256">SHA256</mat-option>
+                        <mat-option value="sha384">SHA384</mat-option>
+                        <mat-option value="sha512">SHA512</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Diffie-Hellman Group</mat-label>
+                      <mat-select formControlName="p1_dh_group" required>
+                        <mat-option value="1">1 (MODP 768)</mat-option>
+                        <mat-option value="2">2 (MODP 1024)</mat-option>
+                        <mat-option value="5">5 (MODP 1536)</mat-option>
+                        <mat-option value="14">14 (MODP 2048)</mat-option>
+                        <mat-option value="15">15 (MODP 3072)</mat-option>
+                        <mat-option value="16">16 (MODP 4096)</mat-option>
+                        <mat-option value="17">17 (MODP 6144)</mat-option>
+                        <mat-option value="18">18 (MODP 8192)</mat-option>
+                        <mat-option value="19">19 (ECP 256)</mat-option>
+                        <mat-option value="20">20 (ECP 384)</mat-option>
+                        <mat-option value="21">21 (ECP 521)</mat-option>
+                        <mat-option value="27">27 (ECP 224BP)</mat-option>
+                        <mat-option value="28">28 (ECP 256BP)</mat-option>
+                        <mat-option value="29">29 (ECP 382BP)</mat-option>
+                        <mat-option value="30">30 (ECP 521BP)</mat-option>
+                        <mat-option value="31">31 (Curve25519)</mat-option>
+                        <mat-option value="32">32 (Curve448)</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Key Lifetime (seconds)</mat-label>
+                      <input matInput type="number" formControlName="p1_key_lifetime" required>
+                    </mat-form-field>
+                  </div>
+                  <div class="form-column">
+                    <h3 class="form-section-title">Authentication</h3>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Pre-shared Key</mat-label>
+                      <input matInput type="password" formControlName="pre_shared_key" [required]="!isEditMode">
+                      <mat-hint *ngIf="isEditMode">Leave blank to keep existing key</mat-hint>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>IKE Version</mat-label>
+                      <mat-select formControlName="ike_version" required>
+                        <mat-option value="1">IKEv1</mat-option>
+                        <mat-option value="2">IKEv2</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Local ID</mat-label>
+                      <input matInput formControlName="p1_local_id" required>
+                    </mat-form-field>
+                    <h3 class="form-section-title">Phase 2 Selectors</h3>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Local Address</mat-label>
+                      <input matInput formControlName="p2_local_address" placeholder="e.g., 192.168.1.0/24" required>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Remote Address</mat-label>
+                      <input matInput formControlName="p2_remote_address" placeholder="e.g., 10.0.0.0/16" required>
+                    </mat-form-field>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          </ng-container>
 
-          <!-- =================================================== -->
-          <!-- CASE: Site-to-Site - IKEv2 Pre-Shared Key (ĐÃ ĐƠN GIẢN HÓA) -->
-          <!-- =================================================== -->
-          <div *ngSwitchCase="'ikev2-psk'">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Name</mat-label>
-              <input matInput formControlName="name" required>
-            </mat-form-field>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Comments</mat-label>
-              <textarea matInput formControlName="comments"></textarea>
-            </mat-form-field>
+          <!-- ======================== -->
+          <!-- CATEGORY: REMOTE ACCESS  -->
+          <!-- ======================== -->
+          <ng-container *ngSwitchCase="'remote-access'">
+            <div [ngSwitch]="selectionFormGroup.value.auth_method">
 
-            <div class="form-container">
-              <!-- Cột trái -->
-              <div class="form-column">
-                <h3 class="form-section-title">Network</h3>
+              <!-- === FORM 3: Remote Access / IKEv2 Certificate === -->
+              <div *ngSwitchCase="'ikev2-cert'">
                 <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Remote Gateway IP Address</mat-label>
-                  <input matInput formControlName="remote_gateway_ip" required>
+                  <mat-label>Connection Name</mat-label>
+                  <input matInput formControlName="name" required>
                 </mat-form-field>
-
-                <h3 class="form-section-title">Phase 1 Proposal</h3>
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Encryption</mat-label>
-                  <mat-select formControlName="p1_encryption" required>
-                    <mat-option value="aes128">AES-128</mat-option>
-                    <mat-option value="aes192">AES-192</mat-option>
-                    <mat-option value="aes256">AES-256</mat-option>
-                    <mat-option value="3des">3DES</mat-option>
-                  </mat-select>
-                </mat-form-field>
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Authentication</mat-label>
-                  <mat-select formControlName="p1_authentication" required>
-                    <mat-option value="sha1">SHA1</mat-option>
-                    <mat-option value="sha256">SHA256</mat-option>
-                    <mat-option value="sha384">SHA384</mat-option>
-                    <mat-option value="sha512">SHA512</mat-option>
-                  </mat-select>
-                </mat-form-field>
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Diffie-Hellman Group</mat-label>
-                  <mat-select formControlName="p1_dh_group" required>
-                    <mat-option value="1">1 (MODP 768)</mat-option>
-                    <mat-option value="2">2 (MODP 1024)</mat-option>
-                    <mat-option value="5">5 (MODP 1536)</mat-option>
-                    <mat-option value="14">14 (MODP 2048)</mat-option>
-                    <mat-option value="15">15 (MODP 3072)</mat-option>
-                    <mat-option value="16">16 (MODP 4096)</mat-option>
-                    <mat-option value="17">17 (MODP 6144)</mat-option>
-                    <mat-option value="18">18 (MODP 8192)</mat-option>
-                    <mat-option value="19">19 (ECP 256)</mat-option>
-                    <mat-option value="20">20 (ECP 384)</mat-option>
-                    <mat-option value="21">21 (ECP 521)</mat-option>
-                    <mat-option value="27">27 (ECP 224BP)</mat-option>
-                    <mat-option value="28">28 (ECP 256BP)</mat-option>
-                    <mat-option value="29">29 (ECP 382BP)</mat-option>
-                    <mat-option value="30">30 (ECP 521BP)</mat-option>
-                    <mat-option value="31">31 (Curve25519)</mat-option>
-                    <mat-option value="32">32 (Curve448)</mat-option>
-                  </mat-select>
-                </mat-form-field>
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Key Lifetime (seconds)</mat-label>
-                  <input matInput type="number" formControlName="p1_key_lifetime" required>
-                </mat-form-field>
+                <div class="form-container">
+                  <div class="form-column">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>IKE Version</mat-label>
+                      <mat-select formControlName="ike_version">
+                        <mat-option value="any">Any IKE version</mat-option>
+                        <mat-option value="ikev1">IKEv1</mat-option>
+                        <mat-option value="ikev2">IKEv2</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Server Address</mat-label>
+                      <input matInput formControlName="server_address" placeholder="Local public IP or hostname">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Remote Address</mat-label>
+                      <input matInput formControlName="remote_address" required
+                             placeholder="Remote peer IP or hostname">
+                    </mat-form-field>
+                    <mat-divider></mat-divider>
+                    <div class="checkbox-group">
+                      <mat-checkbox formControlName="send_certificate_request">Send certificate request</mat-checkbox>
+                    </div>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Start Action</mat-label>
+                      <mat-select formControlName="start_action">
+                        <mat-option value="none">None</mat-option>
+                        <mat-option value="start">Start</mat-option>
+                        <mat-option value="trap">Trap</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <mat-divider></mat-divider>
+                    <h3 class="form-section-title">Local Certificate</h3>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Server certificate</mat-label>
+                      <mat-select formControlName="server_certificate_name" required>
+                        <mat-option *ngFor="let cert of serverCertificates" [value]="cert.name">{{ cert.name }}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="detailsFormGroup.get('server_certificate_name')?.hasError('requireKeyType')">
+                        Must be a certificate with a private key.
+                      </mat-error>
+                    </mat-form-field>
+                    <div class="upload-section">
+                      <button type="button" mat-stroked-button (click)="localFileInput.click()">
+                        <mat-icon>upload_file</mat-icon>
+                        Upload new certificate
+                      </button>
+                      <input hidden (change)="onFileSelected($event, 'server_certificate_name')" #localFileInput
+                             type="file"/>
+                    </div>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Identity</mat-label>
+                      <mat-select formControlName="local_identity">
+                        <mat-option *ngFor="let id of selectedLocalCertIdentities" [value]="id">{{ id }}</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <div class="form-column">
+                    <h3 class="form-section-title">Remote Certificate & Peer</h3>
+                    <mat-checkbox formControlName="auto_ca_select">Choose a CA certificate automatically</mat-checkbox>
+                    <ng-container *ngIf="!detailsFormGroup.value.auto_ca_select">
+                      <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>CA/Peer certificate</mat-label>
+                        <mat-select formControlName="ca_certificate_name">
+                          <mat-option *ngFor="let cert of caCertificates" [value]="cert.name">{{ cert.name }}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                      <!-- (MỚI) Nút upload cho CA/Peer -->
+                      <div class="upload-section">
+                        <button type="button" mat-stroked-button (click)="caFileInput.click()">
+                          <mat-icon>upload_file</mat-icon>
+                          Upload new CA/Peer cert
+                        </button>
+                        <input hidden (change)="onFileSelected($event, 'ca_certificate_name')" #caFileInput
+                               type="file"/>
+                      </div>
+                    </ng-container>
+                    <mat-checkbox formControlName="use_server_value">Use server value for Peer Identity</mat-checkbox>
+                    <mat-form-field *ngIf="!detailsFormGroup.value.use_server_value" appearance="outline"
+                                    class="full-width">
+                      <mat-label>Custom Peer Identity</mat-label>
+                      <input matInput formControlName="peer_identity">
+                    </mat-form-field>
+                    <mat-divider></mat-divider>
+                    <h3 class="form-section-title">Traffic Selectors</h3>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Local traffic selector</mat-label>
+                      <input matInput formControlName="local_traffic_selector">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Remote traffic selector</mat-label>
+                      <input matInput formControlName="remote_traffic_selector">
+                    </mat-form-field>
+                  </div>
+                </div>
               </div>
-              <!-- Cột phải -->
-              <div class="form-column">
-                <h3 class="form-section-title">Authentication</h3>
+
+              <!-- === FORM 4: Remote Access / IKEv2 Pre-Shared Key === -->
+              <div *ngSwitchCase="'ikev2-psk'">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Connection Name</mat-label>
+                  <input matInput formControlName="name" required>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Server ID</mat-label>
+                  <input matInput formControlName="server_id" required placeholder="e.g., vpn.yourdomain.com">
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Remote User ID</mat-label>
+                  <input matInput formControlName="remote_user_id" required placeholder="e.g., user@yourdomain.com">
+                </mat-form-field>
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Pre-shared Key</mat-label>
                   <input matInput type="password" formControlName="pre_shared_key" [required]="!isEditMode">
                   <mat-hint *ngIf="isEditMode">Leave blank to keep existing key</mat-hint>
                 </mat-form-field>
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>IKE Version</mat-label>
-                  <mat-select formControlName="ike_version" required>
-                    <mat-option value="1">IKEv1</mat-option>
-                    <mat-option value="2">IKEv2</mat-option>
-                  </mat-select>
-                </mat-form-field>
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Local ID</mat-label>
-                  <input matInput formControlName="p1_local_id" required>
-                </mat-form-field>
-
-                <h3 class="form-section-title">Phase 2 Selectors</h3>
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Local Address</mat-label>
-                  <input matInput formControlName="p2_local_address" placeholder="e.g., 192.168.1.0/24" required>
-                </mat-form-field>
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Remote Address</mat-label>
-                  <input matInput formControlName="p2_remote_address" placeholder="e.g., 10.0.0.0/16" required>
-                </mat-form-field>
               </div>
             </div>
-          </div>
+          </ng-container>
 
+          <!-- Default case -->
           <div *ngSwitchDefault>
-            <p>Please go back and select an authentication method to continue.</p>
+            <p>Please go back and select a category and method to continue.</p>
           </div>
         </div>
 

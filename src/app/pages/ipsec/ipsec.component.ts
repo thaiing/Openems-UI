@@ -41,10 +41,12 @@ export class IpsecComponent implements OnInit {
   }
 
   loadConnections(): void {
+    // *** SỬA LỖI Ở ĐÂY: Trả lại đúng tên hàm getIpsecConnections ***
     this.apiService.getIpsecConnections().subscribe({
       next: (data) => {
-        this.siteToSiteConnections = data.filter(c => c.conn_type === 'site-to-site');
-        this.remoteAccessConnections = data.filter(c => c.conn_type === 'remote-access');
+        // Giữ nguyên phần sửa lỗi lọc chữ hoa/thường
+        this.siteToSiteConnections = data.filter(c => c.conn_type && c.conn_type.toLowerCase() === 'site-to-site');
+        this.remoteAccessConnections = data.filter(c => c.conn_type && c.conn_type.toLowerCase() === 'remote-access');
       },
       error: (err) => {
         console.error('Failed to load connections', err);
@@ -58,7 +60,6 @@ export class IpsecComponent implements OnInit {
   }
 
   editConnection(connection: any): void {
-    // Trong tương lai, bạn có thể gọi API để lấy chi tiết connection trước khi mở dialog
     this.openEditDialog(connection);
   }
 
@@ -71,7 +72,6 @@ export class IpsecComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      // Nếu dialog trả về 'true' (lưu thành công), tải lại danh sách
       if (result) {
         this.loadConnections();
       }
@@ -80,6 +80,7 @@ export class IpsecComponent implements OnInit {
 
   deleteConnection(connection: any): void {
     if (confirm(`Are you sure you want to delete the connection "${connection.name}"?`)) {
+      // *** SỬA LỖI Ở ĐÂY: Trả lại đúng tên hàm deleteIpsecConnection ***
       this.apiService.deleteIpsecConnection(connection.id).subscribe({
         next: () => {
           this.notificationService.showSuccess('Connection deleted successfully');
