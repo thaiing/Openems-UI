@@ -46,8 +46,7 @@ export class ApiService {
   private isConnected = false;
   private edgeId = '0';
 
-  // URL cho API network viết bằng Python
-  private networkApiUrl = 'http://192.168.4.93:5000';
+  // URL cho API đã được xóa bỏ để dùng đường dẫn tương đối
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -61,10 +60,11 @@ export class ApiService {
   // ====================================================================
   // PHẦN 1: Giao tiếp WebSocket (Giữ nguyên)
   // ====================================================================
-
   private connect(): void {
+    const protocol = window.location.protocol.replace('http', 'ws');
+    const host = window.location.host;
     this.socket$ = webSocket({
-      url: '/jsonrpc',
+      url: `${protocol}//${host}/jsonrpc`, // Sử dụng đường dẫn động
       deserializer: (e) => JSON.parse(e.data),
       serializer: (value) => JSON.stringify(value),
       openObserver: {
@@ -249,50 +249,38 @@ export class ApiService {
   }
 
   // ====================================================================
-  // PHẦN 3: Giao tiếp HTTP với API Network (Phần mới được thêm vào)
+  // PHẦN 3: Giao tiếp HTTP với các API Python (Phần đã được sửa)
   // ====================================================================
 
-  /**
-   * Lấy danh sách cấu hình mạng từ backend Python.
-   */
   getNetworkConfigs(): Observable<NetworkConfig[]> {
-    const url = `${this.networkApiUrl}/api/network-config`;
-    return this.http.get<NetworkConfig[]>(url);
+    return this.http.get<NetworkConfig[]>('/api/network/config');
   }
 
-  /**
-   * Cập nhật cấu hình mạng cho một interface cụ thể.
-   * @param ifaceName Tên interface (ví dụ: 'enp2s0')
-   * @param config Dữ liệu cấu hình mới
-   */
   setNetworkConfig(ifaceName: string, config: Partial<NetworkConfig>): Observable<NetworkConfig> {
-    const url = `${this.networkApiUrl}/api/network-config/${ifaceName}`;
-    return this.http.post<NetworkConfig>(url, config);
+    return this.http.post<NetworkConfig>(`/api/network/config/${ifaceName}`, config);
   }
 
   getIpsecConnections(): Observable<any[]> {
-    // Thay thế URL bằng địa chỉ API thật của bạn
-    return this.http.get<any[]>('http://192.168.4.93:5001/api/connections');
+    return this.http.get<any[]>('/api/ipsec/connections');
   }
 
   createIpsecConnection(connection: any): Observable<any> {
-    return this.http.post<any>('http://192.168.4.93:5001/api/connections', connection);
+    return this.http.post<any>('/api/ipsec/connections', connection);
   }
 
   updateIpsecConnection(connId: string, connection: any): Observable<any> {
-    return this.http.put<any>(`http://192.168.4.93:5001/api/connections/${connId}`, connection);
+    return this.http.put<any>(`/api/ipsec/connections/${connId}`, connection);
   }
 
   deleteIpsecConnection(connId: string): Observable<any> {
-    return this.http.delete<any>(`http://192.168.4.93:5001/api/connections/${connId}`);
+    return this.http.delete<any>(`/api/ipsec/connections/${connId}`);
   }
 
   getCertificates(): Observable<any[]> {
-    return this.http.get<any[]>('http://192.168.4.93:5001/api/certificates');
+    return this.http.get<any[]>('/api/ipsec/certificates');
   }
 
   uploadCertificate(formData: FormData): Observable<any> {
-    // API endpoint này phải khớp với endpoint trong file Python của bạn
-    return this.http.post<any>('http://192.168.4.93:5001/api/certificates/upload', formData);
+    return this.http.post<any>('/api/ipsec/certificates/upload', formData);
   }
 }

@@ -10,13 +10,19 @@
     {
       "key": "modbus0",
       "displayName": "Port 1",
-      "portName": "/dev/ttyS0"
+      "portName": "/dev/ttyS1"
     },
     {
       "key": "modbus1",
       "displayName": "Port 2",
-      "portName": "/dev/ttyS1"
+      "portName": "/dev/ttyS7"
+    },
+    {
+      "key": "modbus2",
+      "displayName": "Port 3",
+      "portName": "/dev/ttyS9"
     }
+
   ],
   "inverterSetup": {
     "currentTier": "level1",

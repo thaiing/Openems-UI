@@ -1,16 +1,28 @@
 {
   "/jsonrpc": {
-    "target": "http://222.252.22.158:5559",
+    "target": "http://192.168.127.15:8085",
     "secure": false,
     "ws": true
   },
   "/system/console": {
-    "target": "http://222.252.22.158:5555",
+    "target": "http://192.168.127.15:8080",
     "secure": false,
     "auth": "admin:admin"
   },
-  "/api": {
-    "target": "http://192.168.4.93:5000",
-    "secure": false
+  },
+  "/api/ipsec": {
+    "target": "http://192.168.127.15:5000",
+    "secure": false,
+    "pathRewrite": {
+      "^/api/ipsec": ""
+    }
+  },
+  "/api/network": {
+    "target": "http://192.168.127.15:5001",
+    "secure": false,
+    "pathRewrite": {
+      "^/api/network": ""
+    }
   }
+
 }

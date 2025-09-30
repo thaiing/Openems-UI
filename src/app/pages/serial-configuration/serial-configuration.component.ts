@@ -2,8 +2,8 @@ import {Component, OnInit, OnDestroy} from '@angular/core';
 import {HttpClient, HttpClientModule} from '@angular/common/http';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {Subscription, of, forkJoin, filter, take} from 'rxjs';
-import {catchError, switchMap, tap, map} from 'rxjs/operators';
+import {Subscription, of, forkJoin, filter} from 'rxjs';
+import {catchError, switchMap, tap} from 'rxjs/operators';
 import {StateService} from '../../services/state.service';
 import {ApiService} from '../../services/api.service';
 import {MatFormFieldModule} from '@angular/material/form-field';
@@ -44,6 +44,7 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
   portInEditing: string | null = null;
 
   private dataSubscription!: Subscription;
+  private pidMap = new Map<string, string>();
   readonly FACTORY_PID = 'Bridge.Modbus.Serial';
 
   baudRates = [9600, 19200, 38400, 57600, 115200];
@@ -57,65 +58,64 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
     private apiService: ApiService,
     private fb: FormBuilder,
     private http: HttpClient
-  ) {
-  }
+  ) {}
 
   ngOnInit(): void {
     this.addForm = this.fb.group({
-      template: [null, Validators.required], baudRate: ['9600', Validators.required],
-      databits: ['8', Validators.required], stopbits: ['ONE', Validators.required],
+      template: [null, Validators.required],
+      baudRate: ['9600', Validators.required],
+      databits: ['8', Validators.required],
+      stopbits: ['ONE', Validators.required],
       parity: ['NONE', Validators.required]
     });
     this.editForm = this.fb.group({
-      baudRate: ['', Validators.required], databits: ['', Validators.required],
-      stopbits: ['', Validators.required], parity: ['', Validators.required]
+      baudRate: ['', Validators.required],
+      databits: ['', Validators.required],
+      stopbits: ['', Validators.required],
+      parity: ['', Validators.required]
     });
 
-    this.loadData();
+    this.loadInitialDataAndSubscribe();
   }
 
-  loadData(): void {
-    this.isLoading = true;
+  ngOnDestroy(): void {
     if (this.dataSubscription) {
       this.dataSubscription.unsubscribe();
     }
+  }
 
-    // Dùng forkJoin để lấy templates và PIDs dài từ Felix cùng lúc
-    this.dataSubscription = forkJoin({
-      config: this.http.get<any>('assets/config/app-config.json').pipe(catchError(() => of({serialPortTemplates: []}))),
+  loadInitialDataAndSubscribe(): void {
+    this.isLoading = true;
+
+    // 1. Tải dữ liệu tĩnh một lần duy nhất
+    forkJoin({
+      config: this.http.get<any>('assets/config/app-config.json').pipe(catchError(() => of({ serialPortTemplates: [] }))),
       felixPids: this.apiService.getFelixPids()
     }).pipe(
-      // Sau khi có cả hai, mới lắng nghe dữ liệu chi tiết từ WebSocket
-      switchMap(({config, felixPids}) => {
+      tap(({ config, felixPids }) => {
         this.portTemplates = config.serialPortTemplates || [];
 
         // Xây dựng "bản đồ" tra cứu từ alias -> PID dài
-        const pidMap = new Map<string, string>();
+        this.pidMap.clear();
         felixPids
           .filter(p => p.fpid === this.FACTORY_PID)
           .forEach(p => {
             const aliasMatch = p.nameHint?.match(/\[(.*?)\]/);
             if (aliasMatch && aliasMatch[1]) {
-              pidMap.set(aliasMatch[1], p.id);
+              this.pidMap.set(aliasMatch[1], p.id);
             }
           });
-
-        // Lắng nghe dữ liệu chi tiết, chờ đến khi có dữ liệu thật (khác null)
-        return this.stateService.components$.pipe(
-          filter(components => components !== null),
-          take(1), // Chỉ lấy 1 lần để forkJoin hoàn thành
-          map(allComponents => ({allComponents, pidMap})) // Gửi cả hai đi tiếp
-        );
-      })
-    ).subscribe(({allComponents, pidMap}) => {
-      // Kết hợp hai nguồn dữ liệu để tạo ra danh sách port hoàn chỉnh
+      }),
+      // 2. Lắng nghe dữ liệu động từ WebSocket
+      switchMap(() => this.stateService.components$.pipe(filter(components => components !== null)))
+    ).subscribe(allComponents => {
+      // 3. Xử lý và cập nhật danh sách port mỗi khi có dữ liệu mới
       this.ports = Object.entries(allComponents)
         .filter(([id, config]: [string, any]) => config.factoryId === this.FACTORY_PID)
         .map(([id, config]: [string, any]) => {
           const props = config.properties || {};
-          const longPid = pidMap.get(id); // Tra cứu PID dài
+          const longPid = this.pidMap.get(id);
 
-          // Chỉ thêm port vào danh sách nếu tìm thấy PID dài tương ứng
           if (!longPid) {
             console.warn(`Không tìm thấy PID dài cho alias: ${id}`);
             return null;
@@ -123,7 +123,7 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
 
           return {
             key: props.alias,
-            pid: longPid, // QUAN TRỌNG: Gán PID dài vào đây
+            pid: longPid,
             alias: id,
             displayName: this.portTemplates.find(t => t.key === props.alias)?.displayName || `Port [${props.alias}]`,
             portName: props.portName,
@@ -133,17 +133,12 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
             parity: props.parity,
           };
         })
-        .filter(port => port !== null); // Lọc bỏ những port không hợp lệ
+        .filter(port => port !== null);
 
       this.isLoading = false;
     });
   }
 
-  ngOnDestroy(): void {
-    if (this.dataSubscription) {
-      this.dataSubscription.unsubscribe();
-    }
-  }
 
   showAddForm(): void {
     this.isAdding = true;
@@ -170,7 +165,7 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
       alias: template.key, enabled: 'true', portName: template.portName,
       baudRate: formValue.baudRate?.toString(), databits: formValue.databits?.toString(),
       stopbits: formValue.stopbits, parity: formValue.parity, enableTermination: 'false',
-      delayBeforeTx: '0', delayAfterTx: '0', logVerbosity: '1',
+      delayBeforeTx: '0', delayAfterTx: '0', logVerbosity: 'NONE',
       invalidateElementsAfterReadErrors: '1',
       propertylist: 'id,alias,enabled,portName,baudRate,databits,stopbits,parity,enableTermination,delayBeforeTx,delayAfterTx,logVerbosity,invalidateElementsAfterReadErrors'
     };
@@ -184,7 +179,7 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
         if (result) {
           this.notificationService.showSuccess('Port created successfully!');
           this.cancelAdd();
-          this.stateService.refreshState();
+          this.stateService.refreshState(); // Dòng này bây giờ sẽ hoạt động
         }
       });
   }
@@ -225,7 +220,6 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
       propertylist: 'alias,enabled,portName,baudRate,databits,stopbits,parity'
     };
 
-    // ĐƯỜNG DẪN NÀY BÂY GIỜ SẼ ĐÚNG VÌ port.pid LÀ PID DÀI
     const fullPidPath = `/system/console/configMgr/${port.pid}`;
 
     this.apiService.updateSerialPortConfigFelix(fullPidPath, updateConfig)
@@ -237,7 +231,7 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
         if (result) {
           this.notificationService.showSuccess('Configuration saved successfully!');
           this.cancelEdit();
-          this.stateService.refreshState();
+          this.stateService.refreshState(); // Dòng này bây giờ sẽ hoạt động
         }
       });
   }
@@ -252,7 +246,7 @@ export class SerialConfigurationComponent implements OnInit, OnDestroy {
       this.apiService.deleteSerialPort(fullPidPath)
         .subscribe(() => {
           this.notificationService.showSuccess('Port deleted successfully!');
-          this.stateService.refreshState();
+          this.stateService.refreshState(); // Dòng này bây giờ sẽ hoạt động
         });
     }
   }
